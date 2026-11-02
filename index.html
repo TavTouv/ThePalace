@@ -6,11 +6,11 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="Unicorn">
+  <meta name="apple-mobile-web-app-title" content="The Palace">
   <meta name="theme-color" content="#08060f">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Playfair+Display:wght@600;700;800&family=VT323&family=Bebas+Neue&family=Manrope:wght@500;700;800&family=Cinzel:wght@500;700;900&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Press+Start+2P&display=swap" rel="stylesheet">
-  <title>Unicorn</title>
+  <title>The Palace</title>
   <link id="favicon-lien" rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23f3e6c4'/%3E%3Cstop offset='.5' stop-color='%23d9c2ff'/%3E%3Cstop offset='1' stop-color='%238ed6e6'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='14' fill='%2308060f'/%3E%3Cpath d='M32 7 L42 50 H22 Z' fill='url(%23g)'/%3E%3Cpath d='M25.5 38 L40 31 M23.8 45 L41.6 37.5 M28 29.5 L38 25 M30 21 L35 18.8' stroke='%2308060f' stroke-width='2.2' stroke-linecap='round' fill='none'/%3E%3Crect x='18' y='50' width='28' height='4' rx='2' fill='%23ecd7a6'/%3E%3C/svg%3E">
   <base target="_top">
   <script>
@@ -39,7 +39,7 @@
         || (typeof google !== 'undefined' && google.script && google.script.run);
       if (estDansAppsScript) return; 
 
-      // ============ CONFIGURATION UNICORN ============
+      // ============ CONFIGURATION THE PALACE ============
       // Colle ici l'URL de TON déploiement Apps Script (celle qui finit par /exec).
       var URL_API_APPS_SCRIPT = localStorage.getItem('unicorn_api_url') ||
         'https://script.google.com/macros/s/AKfycbzbbQcaSg1wYwIYmHLAJYzGXP-OTgPrCdMy-w2PxbdbNjJ36AiE034S8SGJVTfb2xuX/exec';
@@ -302,7 +302,7 @@
     }
 
 
-    /* ===== Thème Unicorn : velours nuit, nacre et champagne =====
+    /* ===== Thème The Palace (clé interne "unicorn") : velours nuit, nacre et champagne =====
        Une seule extravagance : le logo, qui se nacre en irisé à l'ouverture. Le reste reste
        sobre pour que les chiffres de la nuit gardent la vedette. */
     [data-theme="unicorn"] {
@@ -1281,7 +1281,7 @@
         </svg>
     <div class="vitrine-header-fixe">
       <div class="vitrine-header-contenu">
-        <div class="brand" id="vitrine-brand" style="font-size:24px;">UNICORN</div>
+        <div class="brand" id="vitrine-brand" style="font-size:24px;">THE PALACE</div>
         <div class="flex" id="vitrine-nav-liens" style="align-items:center;"></div>
         <div id="vitrine-header-action"><button class="btn-primary" onclick="ouvrirEcranConnexion()">Se connecter</button></div>
       </div>
@@ -1344,7 +1344,7 @@
 
       <div id="vitrine-page-vip" class="vitrine-page hidden">
         <div class="orne-page orne-large">
-          <div class="orne-entete"><svg class="orne-orn" aria-hidden="true"><use href="#orn-haut"/></svg><h2 class="orne-titre">Offres VIP</h2><div class="orne-sous">Le cercle privilégié du Unicorn</div></div>
+          <div class="orne-entete"><svg class="orne-orn" aria-hidden="true"><use href="#orn-haut"/></svg><h2 class="orne-titre">Offres VIP</h2><div class="orne-sous">Le cercle privilégié de The Palace</div></div>
           <div class="vip-grille" id="vitrine-vip"></div>
         </div>
       </div>
@@ -1434,7 +1434,7 @@
   <div id="login-screen" class="modal-overlay hidden">
     <div class="modal-card" style="max-width:380px;text-align:center;">
       <div class="flex-between mb10" style="text-align:left;">
-        <div class="brand" id="brand-login" style="font-size:22px;">UNICORN</div>
+        <div class="brand" id="brand-login" style="font-size:22px;">THE PALACE</div>
         <button class="btn-ghost" id="login-fermer-btn" onclick="fermerModaleConnexion()">✕</button>
       </div>
       <div class="login-marquee hidden" id="login-slogan-wrap"><span id="login-slogan"></span></div>
@@ -1495,7 +1495,7 @@
 
   <div id="app">
     <header>
-      <div class="brand" style="font-size:20px;"><span id="brand-header" onclick="clicLogoEasterEgg()" style="cursor:pointer;user-select:none;">UNICORN</span></div>
+      <div class="brand" style="font-size:20px;"><span id="brand-header" onclick="clicLogoEasterEgg()" style="cursor:pointer;user-select:none;">THE PALACE</span></div>
       <div class="flex" style="align-items:center;gap:16px;">
         <div class="notif-bell" onclick="toggleNotifPanel()" title="Notifications">
           🔔<span class="notif-badge hidden" id="notif-badge">0</span>
@@ -2621,7 +2621,7 @@
             </div>
             <div class="settings-row">
               <div><div class="settings-row-label">Info publique (vitrine)</div><div class="small">Adresse, contact, réseaux - affiché sur la page publique, avant toute connexion. Vide = section masquée.</div></div>
-              <textarea id="master-info-publique" rows="2" maxlength="500" placeholder="Ex: 123 rue du Vice, Los Santos - Discord: unicorn.rp" style="width:220px;"></textarea>
+              <textarea id="master-info-publique" rows="2" maxlength="500" placeholder="Ex: 123 rue du Vice, Los Santos - Discord: thepalace.rp" style="width:220px;"></textarea>
             </div>
             <div class="settings-row">
               <div><div class="settings-row-label">À propos (vitrine)</div><div class="small">L'histoire du lieu, le concept - page dédiée sur la vitrine publique.</div></div>
@@ -2639,7 +2639,7 @@
             </div>
             <div class="settings-row">
               <div><div class="settings-row-label">Nom de l'entreprise</div><div class="small">Affiché partout (titre, connexion, en-tête).</div></div>
-              <input id="master-nom-entreprise" placeholder="Ex: Unicorn" style="width:220px;">
+              <input id="master-nom-entreprise" placeholder="Ex: The Palace" style="width:220px;">
             </div>
             <div class="settings-row">
               <div><div class="settings-row-label">Slogan</div><div class="small">Sous le nom, sur l'écran de connexion.</div></div>
@@ -2657,7 +2657,7 @@
             <div class="settings-row">
               <div><div class="settings-row-label">Thème principal</div><div class="small">Appliqué par défaut à qui n'a pas choisi le sien.</div></div>
               <select id="master-theme-defaut" style="width:auto;">
-                <option value="unicorn">Unicorn</option>
+                <option value="unicorn">The Palace</option>
                 <option value="nuitroyale">Nuit Royale</option>
                 <option value="champagne">Champagne Noir</option>
                 <option value="opale">Lune Opale</option>
@@ -3342,7 +3342,7 @@
   <div id="loading-overlay">
     <div class="loading-spinner-wrap">
       <div class="loading-spinner"></div>
-      <div class="loading-monogram" id="loading-monogram">U</div>
+      <div class="loading-monogram" id="loading-monogram">P</div>
     </div>
     <div class="small mt10" id="loading-text">Chargement...</div>
   </div>
@@ -3529,7 +3529,7 @@
         'dashboard.hideLeaderboard': 'Masquer le classement', 'dashboard.showLeaderboard': 'Afficher le classement',
         'settings.menuPosition': 'Position du menu', 'settings.theme': 'Thème', 'settings.language': 'Langue',
         'settings.left': 'Gauche', 'settings.right': 'Droite',
-        'theme.unicorn': 'Unicorn', 'theme.nuitroyale': 'Nuit Royale', 'theme.clair': 'Clair', 'theme.champagne': 'Champagne Noir', 'theme.opale': 'Lune Opale',
+        'theme.unicorn': 'The Palace', 'theme.nuitroyale': 'Nuit Royale', 'theme.clair': 'Clair', 'theme.champagne': 'Champagne Noir', 'theme.opale': 'Lune Opale',
         'lang.fr': 'Français', 'lang.en': 'English', 'lang.es': 'Español', 'lang.it': 'Italiano',
         'login.identifiant': 'Identifiant', 'login.password': 'Mot de passe', 'login.rester': 'Rester connecté',
         'login.remember': 'Enregistrer mon identifiant', 'login.enter': 'Entrer'
@@ -3544,7 +3544,7 @@
         'dashboard.hideLeaderboard': 'Hide leaderboard', 'dashboard.showLeaderboard': 'Show leaderboard',
         'settings.menuPosition': 'Menu position', 'settings.theme': 'Theme', 'settings.language': 'Language',
         'settings.left': 'Left', 'settings.right': 'Right',
-        'theme.unicorn': 'Unicorn', 'theme.nuitroyale': 'Nuit Royale', 'theme.clair': 'Light', 'theme.champagne': 'Champagne Noir', 'theme.opale': 'Lune Opale',
+        'theme.unicorn': 'The Palace', 'theme.nuitroyale': 'Nuit Royale', 'theme.clair': 'Light', 'theme.champagne': 'Champagne Noir', 'theme.opale': 'Lune Opale',
         'lang.fr': 'Français', 'lang.en': 'English', 'lang.es': 'Español', 'lang.it': 'Italiano',
         'login.identifiant': 'Username', 'login.password': 'Password', 'login.rester': 'Stay signed in',
         'login.remember': 'Remember my username', 'login.enter': 'Enter'
@@ -3559,7 +3559,7 @@
         'dashboard.hideLeaderboard': 'Ocultar clasificación', 'dashboard.showLeaderboard': 'Mostrar clasificación',
         'settings.menuPosition': 'Posición del menú', 'settings.theme': 'Tema', 'settings.language': 'Idioma',
         'settings.left': 'Izquierda', 'settings.right': 'Derecha',
-        'theme.unicorn': 'Unicorn', 'theme.nuitroyale': 'Nuit Royale', 'theme.clair': 'Claro', 'theme.champagne': 'Champagne Noir', 'theme.opale': 'Lune Opale',
+        'theme.unicorn': 'The Palace', 'theme.nuitroyale': 'Nuit Royale', 'theme.clair': 'Claro', 'theme.champagne': 'Champagne Noir', 'theme.opale': 'Lune Opale',
         'lang.fr': 'Français', 'lang.en': 'English', 'lang.es': 'Español', 'lang.it': 'Italiano',
         'login.identifiant': 'Usuario', 'login.password': 'Contraseña', 'login.rester': 'Mantener la sesión',
         'login.remember': 'Recordar mi usuario', 'login.enter': 'Entrar'
@@ -3574,7 +3574,7 @@
         'dashboard.hideLeaderboard': 'Nascondi classifica', 'dashboard.showLeaderboard': 'Mostra classifica',
         'settings.menuPosition': 'Posizione del menu', 'settings.theme': 'Tema', 'settings.language': 'Lingua',
         'settings.left': 'Sinistra', 'settings.right': 'Destra',
-        'theme.unicorn': 'Unicorn', 'theme.nuitroyale': 'Nuit Royale', 'theme.clair': 'Chiaro', 'theme.champagne': 'Champagne Noir', 'theme.opale': 'Lune Opale',
+        'theme.unicorn': 'The Palace', 'theme.nuitroyale': 'Nuit Royale', 'theme.clair': 'Chiaro', 'theme.champagne': 'Champagne Noir', 'theme.opale': 'Lune Opale',
         'lang.fr': 'Français', 'lang.en': 'English', 'lang.es': 'Español', 'lang.it': 'Italiano',
         'login.identifiant': 'Nome utente', 'login.password': 'Password', 'login.rester': 'Resta connesso',
         'login.remember': 'Ricorda il mio nome utente', 'login.enter': 'Entra'
@@ -4273,7 +4273,7 @@
     function afficherVitrinePublique() {
       masquerChargement();
       document.documentElement.setAttribute('data-theme', themeCanon_(DATA.themeVitrine) || 'unicorn');
-      const nom = DATA.nomEntreprise || "UNICORN";
+      const nom = DATA.nomEntreprise || "THE PALACE";
       document.getElementById('vitrine-brand').textContent = nom;
       document.title = nom;
       document.getElementById('vitrine-slogan').textContent = DATA.slogan || '';
@@ -4662,7 +4662,7 @@
     function ouvrirBilletUI(id) {
       const r = DATA.statutReservation && DATA.statutReservation.derniereReservation;
       if (!r || r.ID !== id) return;
-      document.getElementById('billet-marque').textContent = DATA.nomEntreprise || "UNICORN";
+      document.getElementById('billet-marque').textContent = DATA.nomEntreprise || "THE PALACE";
       document.getElementById('billet-nom').textContent = r.Nom;
       document.getElementById('billet-date').textContent = fmtJour_(r.DateReservation);
       document.getElementById('billet-heure').textContent = fmtHeureResa_(r.Heure);
@@ -4952,9 +4952,9 @@
       document.getElementById('login-screen').classList.toggle('plein-ecran', vitrineDesactivee);
       document.getElementById('login-screen').classList.remove('hidden');
 
-      document.getElementById('brand-login').textContent = DATA.nomEntreprise || "UNICORN";
-      document.getElementById('brand-header').textContent = DATA.nomEntreprise || "UNICORN";
-      document.title = (DATA.nomEntreprise || "UNICORN") + ' - Comptabilité';
+      document.getElementById('brand-login').textContent = DATA.nomEntreprise || "THE PALACE";
+      document.getElementById('brand-header').textContent = DATA.nomEntreprise || "THE PALACE";
+      document.title = (DATA.nomEntreprise || "THE PALACE") + ' - Comptabilité';
       if (DATA.slogan) {
         document.getElementById('login-slogan').textContent = DATA.slogan;
         document.getElementById('login-slogan-wrap').classList.remove('hidden');
@@ -5433,8 +5433,8 @@
         document.getElementById('app').style.display = 'block';
         appliquerPageClientActive_();
 
-        document.getElementById('brand-header').textContent = DATA.nomEntreprise || "UNICORN";
-        document.title = (DATA.nomEntreprise || "UNICORN") + ' - Comptabilité';
+        document.getElementById('brand-header').textContent = DATA.nomEntreprise || "THE PALACE";
+        document.title = (DATA.nomEntreprise || "THE PALACE") + ' - Comptabilité';
         document.getElementById('header-bienvenue').textContent =
           t('header.bienvenue') + ', ' + (CURRENT_USER['Nom RP'] || '') + ' (' + libelleRole_(CURRENT_USER['Rôle']) + ')' + (CURRENT_USER.Statut ? ' - ' + CURRENT_USER.Statut : '');
 
@@ -7272,7 +7272,7 @@
       document.getElementById('vitrine-publique').classList.add('hidden');
       document.getElementById('app').style.display = 'block';
       restaurerThemePersonnel_();
-      document.title = (DATA.nomEntreprise || 'UNICORN') + ' - Comptabilité';
+      document.title = (DATA.nomEntreprise || 'THE PALACE') + ' - Comptabilité';
       clearInterval(TIMER_SURVEILLANCE_GENERALE);
       surveillanceGenerale();
       TIMER_SURVEILLANCE_GENERALE = setInterval(function () { if (!document.hidden) surveillanceGenerale(); }, 15000);
@@ -9522,8 +9522,8 @@
         if (lienFavicon && params.favicon) lienFavicon.href = params.favicon;
         DATA.devise = params.devise; DATA.themeParDefaut = params.themeDefaut; DATA.autoLoginActif = params.autoLogin;
         DATA.multiSuccursalesActif = multiSuccursales;
-        document.getElementById('brand-header').textContent = params.nomEntreprise || "UNICORN";
-        document.title = (params.nomEntreprise || "UNICORN") + ' - Comptabilité';
+        document.getElementById('brand-header').textContent = params.nomEntreprise || "THE PALACE";
+        document.title = (params.nomEntreprise || "THE PALACE") + ' - Comptabilité';
         renderMessageDuJourBanniere();
         appliquerVisibiliteSuccursales();
         if (echecs.length > 0) {
