@@ -982,6 +982,12 @@
     .chat-compose button { width: 34px; height: 34px; border-radius: 50%; background: var(--pink); color: white; border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; font-size: 14px; transition: opacity .12s; }
     .chat-compose button:hover { opacity: .85; }
     .notif-bell { position: relative; cursor: pointer; font-size: 18px; user-select: none; }
+    #tbl-salaires-role td, #tbl-salaires-previsions td { vertical-align: middle; }
+    .rap-ligne { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; font-size: 13px; }
+    .rap-etiquette { width: 72px; flex: none; color: var(--text-mute); }
+    .rap-piste { flex: 1; height: 10px; background: var(--bg-card2); border-radius: 5px; overflow: hidden; }
+    .rap-barre { display: block; height: 100%; background: linear-gradient(90deg, var(--pink-deep), var(--gold)); border-radius: 5px; }
+    .rap-valeur { width: 80px; flex: none; text-align: right; font-weight: 600; }
     .rester-connecte { display: flex; align-items: center; gap: 10px; margin-top: 14px; cursor: pointer; user-select: none; font-size: 14px; color: var(--text-mute); }
     .rester-connecte input { position: absolute; opacity: 0; width: 0; height: 0; }
     .rester-case { width: 20px; height: 20px; flex: none; border: 1px solid var(--border); background: var(--bg-card2); border-radius: 5px; display: inline-flex; align-items: center; justify-content: center; transition: background .15s ease, border-color .15s ease; }
@@ -2050,6 +2056,25 @@
         </div>
 
         <div id="patron-sub-paie" class="hidden">
+          <div class="grid grid-2 mb10">
+            <div class="card">
+              <div class="flex-between mb10"><h2 style="margin:0;">Salaires par rôle</h2><span class="small">par semaine</span></div>
+              <div class="small mb10">Montant de paie fixe attribué à chaque rôle. Les nouveaux employés le reçoivent automatiquement.</div>
+              <div class="table-wrap"><table><thead><tr><th>Rôle</th><th>Salaire ($)</th></tr></thead><tbody id="tbl-salaires-role"></tbody></table></div>
+              <div class="flex mt10">
+                <button class="btn-ghost" onclick="enregistrerSalairesRole(false)">Enregistrer les tarifs</button>
+                <button class="btn-primary" onclick="enregistrerSalairesRole(true)">Enregistrer et appliquer à tous</button>
+              </div>
+              <div class="err" id="salaires-role-err"></div>
+            </div>
+            <div class="card">
+              <h2 style="margin:0 0 6px;">Verser les salaires de la semaine</h2>
+              <div class="small mb10">Crée un versement de paie fixe pour chaque employé actif. Un employé n'est jamais payé deux fois la même semaine.</div>
+              <div class="table-wrap"><table><thead><tr><th>Employé</th><th>Rôle</th><th>Paie fixe</th></tr></thead><tbody id="tbl-salaires-previsions"></tbody></table></div>
+              <div class="flex-between mt10"><span class="small">Total de la semaine</span><b class="kpi-gold" id="salaires-total-semaine">$0</b></div>
+              <button class="btn-primary btn-block mt10" onclick="verserSalairesFixesUI()">Verser les salaires</button>
+            </div>
+          </div>
           <div class="grid grid-2">
             <div class="card">
               <h2>Nouveau versement</h2>
@@ -2275,6 +2300,53 @@
       </section>
 
       <section id="tab-stock" class="hidden">
+        <div class="card mb10" id="reappro-carte">
+          <div class="flex-between mb10">
+            <h2 style="margin:0;">À réapprovisionner <span class="small" id="reappro-compte"></span></h2>
+            <div class="flex">
+              <button class="btn-ghost" onclick="copierListeReappro()">Copier la liste</button>
+              <button class="btn-ghost" onclick="exporterReapproCsv()">Exporter CSV</button>
+              <button class="btn-primary" onclick="reapprovisionnerTout()">Tout réapprovisionner</button>
+            </div>
+          </div>
+          <div class="small mb10" id="reappro-info"></div>
+          <div class="table-wrap"><table><thead><tr><th>Article</th><th>Catégorie</th><th>Stock</th><th>Seuil</th><th>À commander</th><th>Coût estimé</th><th></th></tr></thead>
+          <tbody id="reappro-corps"></tbody></table></div>
+          <div class="flex-between mt10"><span class="small">Coût total estimé</span><b class="kpi-gold" id="reappro-total">$0</b></div>
+        </div>
+        <div class="card mb10" id="ingr-reappro-carte">
+          <div class="flex-between mb10">
+            <h2 style="margin:0;">Ingrédients à réapprovisionner <span class="small" id="ingr-reappro-compte"></span></h2>
+            <div class="flex">
+              <button class="btn-ghost" onclick="copierListeIngredients()">Copier la liste</button>
+              <button class="btn-ghost" onclick="exporterIngredientsCsv()">Exporter CSV</button>
+              <button class="btn-primary" onclick="reapprovisionnerIngredientsTout()">Tout réapprovisionner</button>
+            </div>
+          </div>
+          <div class="small mb10" id="ingr-info"></div>
+          <div class="table-wrap"><table><thead><tr><th>Ingrédient</th><th>Stock</th><th>Seuil</th><th>État</th><th>À commander</th><th>Coût estimé</th><th></th></tr></thead>
+          <tbody id="ingr-reappro-corps"></tbody></table></div>
+          <div class="flex-between mt10"><span class="small">Coût total estimé</span><b class="kpi-gold" id="ingr-reappro-total">$0</b></div>
+        </div>
+        <details class="ms-groupe mb10">
+          <summary id="ingr-niveaux-titre">Niveaux d'ingrédients</summary>
+          <div class="ms-groupe-corps">
+            <div class="table-wrap historique-scroll"><table><thead><tr><th>Ingrédient</th><th>Unité</th><th>Stock</th><th>Seuil d'alerte</th><th>Stock de départ</th><th>État</th><th>Actions</th></tr></thead>
+            <tbody id="ingr-niveaux"></tbody></table></div>
+          </div>
+        </details>
+        <details class="ms-groupe mb10" id="ingr-recettes-details" ontoggle="if (this.open) chargerRecettes()">
+          <summary>Recettes (ingrédients de chaque plat)</summary>
+          <div class="ms-groupe-corps">
+            <div class="small mb10">Une ligne par ingrédient, avec la quantité utilisée pour <b>une</b> portion. Par défaut, chaque ingrédient compte pour 1 portion : adapte-les avec tes vraies quantités (en cl, g, unités...) et change l'unité dans « Infos ».</div>
+            <label>Plat ou boisson</label>
+            <select id="recette-article" onchange="renderRecetteEditeur()"></select>
+            <div class="table-wrap mt10"><table><thead><tr><th>Ingrédient</th><th>Quantité par portion</th><th></th></tr></thead><tbody id="recette-lignes"></tbody></table></div>
+            <datalist id="recette-ingredients"></datalist>
+            <div class="flex mt10"><button class="btn-ghost" onclick="ajouterLigneRecette()">+ Ajouter un ingrédient</button><button class="btn-primary" onclick="enregistrerRecette()">Enregistrer la recette</button></div>
+            <div class="err" id="recette-err"></div>
+          </div>
+        </details>
         <div class="card mb10">
           <div class="flex-between mb10"><h2 style="margin:0;">Niveaux de stock</h2></div>
           <div class="table-wrap"><table><thead><tr><th>Article</th><th class="succursale-field">Succursale</th><th>Stock actuel</th><th>Seuil alerte</th><th>État</th><th>Actions</th></tr></thead>
@@ -2535,6 +2607,36 @@
         <div class="card">
           <h2>Liens à passer dans le PMMS</h2>
           <div id="dj-liste"></div>
+        </div>
+      </section>
+
+      <section id="tab-rapports-analyses" class="hidden">
+        <div class="card mb10">
+          <div class="flex-between mb10">
+            <h2 style="margin:0;">Rapports</h2>
+            <div class="flex" id="rap-periodes">
+              <button class="filter-btn" onclick="chargerRapportsAnalyses('aujourdhui', this)">Aujourd'hui</button>
+              <button class="filter-btn active" onclick="chargerRapportsAnalyses('semaine', this)">Cette semaine</button>
+              <button class="filter-btn" onclick="chargerRapportsAnalyses('mois', this)">30 jours</button>
+              <button class="filter-btn" onclick="chargerRapportsAnalyses('total', this)">Tout</button>
+              <button class="btn-ghost" onclick="exporterRapportsCsv()">Exporter CSV</button>
+            </div>
+          </div>
+          <div class="small mb10" id="rap-dates"></div>
+          <div class="grid grid-4" id="rap-kpis"></div>
+        </div>
+        <div class="grid grid-2">
+          <div class="card"><h2 style="margin:0 0 10px;">Ventes par catégorie</h2><div class="table-wrap"><table><thead><tr><th>Catégorie</th><th>Quantité</th><th>Chiffre d'affaires</th><th>Marge</th></tr></thead><tbody id="rap-categories"></tbody></table></div></div>
+          <div class="card"><h2 style="margin:0 0 10px;">Top 10 des articles</h2><div class="table-wrap"><table><thead><tr><th>Article</th><th>Quantité</th><th>Chiffre d'affaires</th></tr></thead><tbody id="rap-top"></tbody></table></div></div>
+        </div>
+        <div class="grid grid-2 mt16">
+          <div class="card"><h2 style="margin:0 0 10px;">Heures de pointe</h2><div id="rap-heures"></div></div>
+          <div class="card"><h2 style="margin:0 0 10px;">Chiffre d'affaires par jour</h2><div id="rap-jours"></div></div>
+        </div>
+        <div class="grid grid-3 mt16">
+          <div class="card"><h2 style="margin:0 0 10px;">Équipe</h2><div class="table-wrap"><table><thead><tr><th>Employé</th><th>Ventes</th><th>CA</th></tr></thead><tbody id="rap-equipe"></tbody></table></div></div>
+          <div class="card"><h2 style="margin:0 0 10px;">VIP et précommandes</h2><div id="rap-vip"></div></div>
+          <div class="card"><h2 style="margin:0 0 10px;">Stock</h2><div id="rap-stock"></div></div>
         </div>
       </section>
 
@@ -4161,6 +4263,313 @@
       document.body.appendChild(ecran);
     }
 
+
+    // ===== Précommande -> vente =====
+    function encaisserPrecommandeUI(id) {
+      const r = (DATA.reservations || []).find(x => x.ID === id);
+      if (!r) return;
+      confirmerActionAvantExecution('Encaisser la précommande', 'Enregistrer la précommande de ' + r.Nom + ' (' + r.Commande + ') comme vente ?', function () {
+        google.script.run.withSuccessHandler(function (res) {
+          r.CommandeVendue = 'Encaissée';
+          showToast('Précommande encaissée : ' + money(res.total) + (res.reduction ? ' (VIP -' + res.reduction + ' %)' : ''));
+          STOCK_CHARGE = false;
+          renderReservationsTable();
+        }).withFailureHandler(onError).convertirReservationEnVente(id, CURRENT_USER.sessionToken);
+      });
+    }
+
+    // ===== Réapprovisionnement =====
+    let REAPPRO = null;
+    function chargerReapprovisionnement() {
+      const corps = document.getElementById('reappro-corps');
+      if (!corps) return;
+      corps.innerHTML = '<tr><td colspan="7" class="small">Chargement...</td></tr>';
+      google.script.run.withSuccessHandler(function (r) { REAPPRO = r; renderReapprovisionnement(); })
+        .withFailureHandler(onError).getListeReapprovisionnement(CURRENT_USER.sessionToken);
+    }
+    function renderReapprovisionnement() {
+      const r = REAPPRO || { lignes: [], cible: 100, total: 0 };
+      document.getElementById('reappro-compte').textContent = r.lignes.length ? '(' + r.lignes.length + ' article' + (r.lignes.length > 1 ? 's' : '') + ')' : '';
+      document.getElementById('reappro-info').textContent = 'Articles à leur seuil d\'alerte ou en rupture. La quantité proposée ramène le stock à ' + r.cible + ' unités.';
+      document.getElementById('reappro-corps').innerHTML = r.lignes.map(l => `<tr>
+        <td><b>${escapeHtml(l.article)}</b></td><td class="small">${escapeHtml(l.categorie)}</td>
+        <td class="${l.stockActuel <= 0 ? 'kpi-red' : 'kpi-gold'}" style="font-weight:700;">${l.stockActuel}</td><td>${l.seuil}</td>
+        <td><input type="number" min="0" class="reappro-qte" data-id="${l.articleId}" value="${l.aCommander}" style="width:90px;" oninput="majTotalReappro_()"></td>
+        <td class="reappro-cout" data-pu="${l.prixAchat}">${money(l.coutEstime)}</td>
+        <td><a class="linklike" onclick="reapprovisionnerLigne('${l.articleId}')">Réapprovisionner</a></td></tr>`).join('')
+        || '<tr><td colspan="7" class="small">Tout est bien approvisionné.</td></tr>';
+      majTotalReappro_();
+    }
+    function majTotalReappro_() {
+      let total = 0;
+      document.querySelectorAll('#reappro-corps .reappro-qte').forEach(inp => {
+        const cout = inp.closest('tr').querySelector('.reappro-cout');
+        const t = (Number(inp.value) || 0) * (Number(cout.dataset.pu) || 0);
+        cout.textContent = money(t); total += t;
+      });
+      document.getElementById('reappro-total').textContent = money(total);
+    }
+    function lignesReappro_(idUnique) {
+      const out = [];
+      document.querySelectorAll('#reappro-corps .reappro-qte').forEach(inp => {
+        const q = Math.floor(Number(inp.value) || 0);
+        if (q > 0 && (!idUnique || inp.dataset.id === idUnique)) out.push({ articleId: inp.dataset.id, qte: q });
+      });
+      return out;
+    }
+    function envoyerReappro_(lignes) {
+      if (!lignes.length) { showToast('Aucune quantité à commander.', true); return; }
+      const total = lignes.reduce((s, l) => { const a = (REAPPRO.lignes.find(x => x.articleId === l.articleId) || {}); return s + l.qte * (a.prixAchat || 0); }, 0);
+      confirmerActionAvantExecution('Réapprovisionner', 'Enregistrer ' + lignes.length + ' achat(s) de réapprovisionnement pour ' + money(total) + ' et remonter le stock ?', function () {
+        google.script.run.withSuccessHandler(function (res) {
+          showToast('Réapprovisionnement enregistré : ' + res.nb + ' article(s), ' + money(res.total));
+          STOCK_CHARGE = false; chargerStock();
+        }).withFailureHandler(onError).reapprovisionnerArticles(lignes, CURRENT_USER.sessionToken);
+      });
+    }
+    function reapprovisionnerLigne(id) { envoyerReappro_(lignesReappro_(id)); }
+    function reapprovisionnerTout() { envoyerReappro_(lignesReappro_(null)); }
+    function texteListeReappro_() {
+      return (REAPPRO ? REAPPRO.lignes : []).map(l => l.article + ' : ' + l.aCommander + ' (stock ' + l.stockActuel + ')').join('\n');
+    }
+    function copierListeReappro() {
+      const t = texteListeReappro_();
+      if (!t) { showToast('Rien à réapprovisionner.'); return; }
+      if (navigator.clipboard) navigator.clipboard.writeText(t).then(() => showToast('Liste copiée.'), () => showToast('Copie impossible.', true));
+      else showToast('Copie impossible sur ce navigateur.', true);
+    }
+    function telechargerCsv_(nom, lignes) {
+      const csv = '\ufeff' + lignes.map(l => l.map(v => '"' + String(v === null || v === undefined ? '' : v).replace(/"/g, '""') + '"').join(';')).join('\r\n');
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+      a.download = nom; document.body.appendChild(a); a.click(); a.remove();
+    }
+    function exporterReapproCsv() {
+      if (!REAPPRO || !REAPPRO.lignes.length) { showToast('Rien à exporter.'); return; }
+      telechargerCsv_('reapprovisionnement.csv', [['Article', 'Catégorie', 'Stock', 'Seuil', 'À commander', 'Prix achat', 'Coût estimé']]
+        .concat(REAPPRO.lignes.map(l => [l.article, l.categorie, l.stockActuel, l.seuil, l.aCommander, l.prixAchat, l.coutEstime])));
+    }
+
+    // ===== Rapports =====
+    let RAPPORT_ANALYSE_PERIODE = 'semaine';
+    let RAPPORT_ANALYSE = null;
+    function chargerRapportsAnalyses(periode, btnEl) {
+      RAPPORT_ANALYSE_PERIODE = periode;
+      if (btnEl) { document.querySelectorAll('#rap-periodes .filter-btn').forEach(b => b.classList.remove('active')); btnEl.classList.add('active'); }
+      document.getElementById('rap-kpis').innerHTML = '<div class="small">Chargement...</div>';
+      google.script.run.withSuccessHandler(function (r) { RAPPORT_ANALYSE = r; renderRapportsAnalyses(); })
+        .withFailureHandler(onError).getRapportsAnalyses(periode, CURRENT_USER.sessionToken);
+    }
+    function barresRapport_(valeurs, etiquettes) {
+      const max = Math.max.apply(null, valeurs.concat([1]));
+      return valeurs.map((v, i) => `<div class="rap-ligne"><span class="rap-etiquette">${escapeHtml(etiquettes[i])}</span><span class="rap-piste"><span class="rap-barre" style="width:${Math.round(v / max * 100)}%"></span></span><span class="rap-valeur">${v ? money(v) : ''}</span></div>`).join('');
+    }
+    function renderRapportsAnalyses() {
+      const r = RAPPORT_ANALYSE; if (!r) return;
+      const k = r.kpis;
+      document.getElementById('rap-dates').textContent = (r.periode === 'total' ? 'Depuis le début' : 'Du ' + fmtDate(r.debut) + ' au ' + fmtDate(r.fin)) + ' - fisc à ' + r.tauxFisc + ' %';
+      const carte = (lib, val, cls) => `<div class="card"><div class="kpi-label">${lib}</div><div class="kpi-value ${cls}">${val}</div></div>`;
+      document.getElementById('rap-kpis').innerHTML =
+        carte('Chiffre d\'affaires', money(k.revenus), 'kpi-green') + carte('Dépenses (achats)', money(k.depenses), 'kpi-red') +
+        carte('Salaires versés', money(k.salaires), 'kpi-red') + carte('Fisc', money(k.fisc), 'kpi-red') +
+        carte('Bénéfice net', money(k.beneficeNet), k.beneficeNet >= 0 ? 'kpi-gold' : 'kpi-red') + carte('Lignes de vente', k.nbLignes, 'kpi-cyan') +
+        carte('Panier moyen', money(k.panierMoyen), 'kpi-cyan') + carte('Marge brute', money(k.margeBrute) + (k.coutMarchandises ? '' : ' <span class="small">(prix d\'achat à renseigner)</span>'), 'kpi-gold');
+      document.getElementById('rap-categories').innerHTML = r.parCategorie.map(c => `<tr><td>${escapeHtml(c.categorie)}</td><td>${c.qte}</td><td class="kpi-gold">${money(c.ca)}</td><td>${c.marge === null ? '-' : money(c.marge)}</td></tr>`).join('') || '<tr><td colspan="4" class="small">Aucune vente sur cette période.</td></tr>';
+      document.getElementById('rap-top').innerHTML = r.topArticles.map(a => `<tr><td>${escapeHtml(a.article)}</td><td>${a.qte}</td><td class="kpi-gold">${money(a.ca)}</td></tr>`).join('') || '<tr><td colspan="3" class="small">Aucune vente.</td></tr>';
+      const heures = r.parHeure.map((v, h) => ({ v: v, h: h })).filter(x => x.v > 0);
+      document.getElementById('rap-heures').innerHTML = heures.length ? barresRapport_(heures.map(x => x.v), heures.map(x => String(x.h).padStart(2, '0') + ' h')) : '<div class="small">Aucune vente.</div>';
+      document.getElementById('rap-jours').innerHTML = r.parJour.length ? barresRapport_(r.parJour.map(x => x.ca), r.parJour.map(x => fmtJour_(x.jour + 'T12:00:00'))) : '<div class="small">Aucune vente.</div>';
+      document.getElementById('rap-equipe').innerHTML = r.parEmploye.map(e => `<tr><td>${escapeHtml(e.employe)}</td><td>${e.lignes}</td><td class="kpi-gold">${money(e.ca)}</td></tr>`).join('') || '<tr><td colspan="3" class="small">Aucune vente.</td></tr>';
+      document.getElementById('rap-vip').innerHTML =
+        `<div class="flex-between"><span>Adhésions VIP</span><b class="kpi-gold">${money(r.vip.ca)}</b></div><div class="small mb10">${r.vip.nb} adhésion(s) ou renouvellement(s)</div>` +
+        `<div class="flex-between"><span>Précommandes encaissées</span><b class="kpi-gold">${money(r.precommandes.ca)}</b></div><div class="small">${r.precommandes.nb} précommande(s)</div>`;
+      const st = r.stock;
+      document.getElementById('rap-stock').innerHTML =
+        `<div class="flex-between"><span>Valeur du stock</span><b class="kpi-gold">${money(st.valeur)}</b></div>` + (st.valeur ? '' : '<div class="small">Renseigne les prix d\'achat pour la valoriser.</div>') +
+        `<div class="flex-between mt10"><span>En rupture</span><b class="${st.nbRupture ? 'kpi-red' : ''}">${st.nbRupture}</b></div>` +
+        `<div class="flex-between"><span>Stock bas</span><b>${st.nbBas}</b></div>` +
+        `<div class="flex-between"><span>À réapprovisionner</span><b>${st.aReapprovisionner}</b></div><div class="small">Coût estimé : ${money(st.coutReappro)}</div>`;
+    }
+    function exporterRapportsCsv() {
+      const r = RAPPORT_ANALYSE; if (!r) return;
+      const k = r.kpis;
+      const l = [['Rapport', RAPPORT_ANALYSE_PERIODE, fmtDate(r.debut), fmtDate(r.fin)], [], ['Indicateur', 'Valeur'],
+        ['Chiffre d\'affaires', k.revenus], ['Dépenses', k.depenses], ['Salaires versés', k.salaires], ['Fisc', k.fisc], ['Bénéfice net', k.beneficeNet], ['Panier moyen', k.panierMoyen], ['Marge brute', k.margeBrute], [],
+        ['Catégorie', 'Quantité', 'CA', 'Marge']].concat(r.parCategorie.map(c => [c.categorie, c.qte, c.ca, c.marge === null ? '' : c.marge]))
+        .concat([[], ['Article', 'Quantité', 'CA']]).concat(r.topArticles.map(a => [a.article, a.qte, a.ca]))
+        .concat([[], ['Employé', 'Lignes', 'CA']]).concat(r.parEmploye.map(e => [e.employe, e.lignes, e.ca]));
+      telechargerCsv_('rapport-the-palace-' + RAPPORT_ANALYSE_PERIODE + '.csv', l);
+    }
+
+    // ===== Salaires par rôle et versement hebdomadaire =====
+    function chargerSalairesRole() {
+      google.script.run.withSuccessHandler(function (res) {
+        const roles = res.roles.slice();
+        Object.keys(res.salaires).forEach(r => { if (roles.indexOf(r) === -1) roles.push(r); });
+        document.getElementById('tbl-salaires-role').innerHTML = roles.map(r => `<tr><td>${escapeHtml(r)}</td><td><input type="number" min="0" class="salaire-role" data-role="${escapeHtml(r)}" value="${res.salaires[r] || ''}" placeholder="0" style="width:130px;"></td></tr>`).join('');
+      }).withFailureHandler(onError).getSalairesParRole(CURRENT_USER.sessionToken);
+      renderPrevisionsSalaires_();
+    }
+    function renderPrevisionsSalaires_() {
+      const actifs = (DATA.employes || []).filter(e => !estValeurVraie_(e.Vire) && !estValeurVraie_(e.Suspendu) && Number(e['Paie fixe ($)']) > 0);
+      document.getElementById('tbl-salaires-previsions').innerHTML = actifs.map(e => `<tr><td>${escapeHtml(e['Nom RP'])}</td><td class="small">${escapeHtml(e['Rôle'])}</td><td>${money(e['Paie fixe ($)'])}</td></tr>`).join('') || '<tr><td colspan="3" class="small">Aucun employé avec une paie fixe.</td></tr>';
+      document.getElementById('salaires-total-semaine').textContent = money(actifs.reduce((s, e) => s + Number(e['Paie fixe ($)']), 0));
+    }
+    function rafraichirDonneesApp_(suite) {
+      google.script.run.withSuccessHandler(function (complet) { Object.assign(DATA, complet); if (suite) suite(); }).withFailureHandler(onError).getDonneesApp(CURRENT_USER.sessionToken);
+    }
+    function enregistrerSalairesRole(appliquer) {
+      const salaires = {};
+      document.querySelectorAll('#tbl-salaires-role .salaire-role').forEach(i => { const v = Number(i.value) || 0; if (v > 0) salaires[i.dataset.role] = v; });
+      document.getElementById('salaires-role-err').textContent = '';
+      const lancer = function () {
+        google.script.run.withSuccessHandler(function (res) {
+          showToast(appliquer ? 'Tarifs enregistrés et appliqués à ' + res.appliques + ' employé(s).' : 'Tarifs enregistrés.');
+          if (appliquer) rafraichirDonneesApp_(function () { renderPrevisionsSalaires_(); if (typeof renderSectionPatron === 'function') renderSectionPatron(); });
+        }).withFailureHandler(function (err) { document.getElementById('salaires-role-err').textContent = err.message || String(err); })
+          .setSalairesParRole(salaires, appliquer, CURRENT_USER.sessionToken);
+      };
+      if (appliquer) confirmerActionAvantExecution('Appliquer les salaires', 'Remplacer la paie fixe de tous les employés par le tarif de leur rôle ?', lancer); else lancer();
+    }
+    function verserSalairesFixesUI() {
+      const total = document.getElementById('salaires-total-semaine').textContent;
+      confirmerActionAvantExecution('Verser les salaires', 'Verser la paie fixe de la semaine à tous les employés actifs (' + total + ') ?', function () {
+        google.script.run.withSuccessHandler(function (res) {
+          showToast(res.nb ? res.nb + ' salaire(s) versé(s) : ' + money(res.total) + (res.deja ? ' (' + res.deja + ' déjà payé(s) cette semaine)' : '') : 'Tout le monde a déjà été payé cette semaine.');
+          rafraichirDonneesApp_(function () { renderPaieTable(); });
+        }).withFailureHandler(onError).verserSalairesFixes(CURRENT_USER.sessionToken);
+      });
+    }
+
+
+    // ===== Ingrédients (recettes, stock, seuils, réapprovisionnement) =====
+    let INGR = null;
+    let RECETTES_DATA = null;
+    const ETAT_ING_PILL = { 'Disponible': 'pill-dispo', 'Stock bas': 'pill-bas', 'Rupture': 'pill-rupture' };
+    function chargerIngredients() {
+      if (!document.getElementById('ingr-reappro-corps')) return;
+      document.getElementById('ingr-reappro-corps').innerHTML = '<tr><td colspan="7" class="small">Chargement...</td></tr>';
+      google.script.run.withSuccessHandler(function (r) { INGR = r; renderIngredients(); })
+        .withFailureHandler(onError).getIngredientsStock(CURRENT_USER.sessionToken);
+    }
+    function renderIngredients() {
+      const r = INGR || { lignes: [], seuilBoissons: 15, seuilNourriture: 5, cible: 100 };
+      const aCommander = r.lignes.filter(l => l.etat !== 'Disponible');
+      document.getElementById('ingr-reappro-compte').textContent = aCommander.length ? '(' + aCommander.length + ')' : '';
+      document.getElementById('ingr-info').textContent = 'Alerte quand il reste de quoi faire seulement ' + r.seuilBoissons + ' de chaque boisson ou ' + r.seuilNourriture + ' de chaque plat utilisant l\'ingrédient. La quantité proposée ramène le stock à son niveau de départ (de quoi faire ' + r.cible + ' de chaque plat).';
+      document.getElementById('ingr-reappro-corps').innerHTML = aCommander.map(l => `<tr>
+        <td><b>${escapeHtml(l.ingredient)}</b></td>
+        <td class="${l.stock <= 0 ? 'kpi-red' : 'kpi-gold'}" style="font-weight:700;">${l.stock}</td><td>${l.seuil}</td>
+        <td><span class="pill ${ETAT_ING_PILL[l.etat] || 'pill-dispo'}">${escapeHtml(l.etat)}</span></td>
+        <td><input type="number" min="0" class="ingr-qte" data-id="${l.ingredientId}" value="${l.aCommander}" style="width:100px;" oninput="majTotalIngredients_()"> <span class="small">${escapeHtml(l.unite)}</span></td>
+        <td class="ingr-cout" data-pu="${l.prixUnitaire}">${money(l.coutEstime)}</td>
+        <td><a class="linklike" onclick="reapprovisionnerIngredientLigne('${l.ingredientId}')">Réapprovisionner</a></td></tr>`).join('')
+        || '<tr><td colspan="7" class="small">Tous les ingrédients sont au-dessus de leur seuil d\'alerte.</td></tr>';
+      majTotalIngredients_();
+      document.getElementById('ingr-niveaux-titre').textContent = 'Niveaux d\'ingrédients (' + r.lignes.length + ')';
+      document.getElementById('ingr-niveaux').innerHTML = r.lignes.map(l => `<tr>
+        <td>${escapeHtml(l.ingredient)}</td><td class="small">${escapeHtml(l.unite)}</td><td style="font-weight:700;">${l.stock}</td>
+        <td>${l.seuil}${l.seuilManuel ? ' <span class="small">(manuel)</span>' : ''}</td><td>${l.cible}</td>
+        <td><span class="pill ${ETAT_ING_PILL[l.etat] || 'pill-dispo'}">${escapeHtml(l.etat)}</span></td>
+        <td><a class="linklike" onclick="ajusterIngredientUI('${l.ingredientId}')">Ajuster</a> <a class="linklike" onclick="infosIngredientUI('${l.ingredientId}')">Infos</a></td></tr>`).join('')
+        || '<tr><td colspan="7" class="small">Aucun ingrédient.</td></tr>';
+    }
+    function majTotalIngredients_() {
+      let total = 0;
+      document.querySelectorAll('#ingr-reappro-corps .ingr-qte').forEach(inp => {
+        const cout = inp.closest('tr').querySelector('.ingr-cout');
+        const t = (Number(inp.value) || 0) * (Number(cout.dataset.pu) || 0);
+        cout.textContent = money(t); total += t;
+      });
+      document.getElementById('ingr-reappro-total').textContent = money(total);
+    }
+    function lignesIngredients_(idUnique) {
+      const out = [];
+      document.querySelectorAll('#ingr-reappro-corps .ingr-qte').forEach(inp => {
+        const q = Number(inp.value) || 0;
+        if (q > 0 && (!idUnique || inp.dataset.id === idUnique)) out.push({ ingredientId: inp.dataset.id, qte: q });
+      });
+      return out;
+    }
+    function envoyerReapproIngredients_(lignes) {
+      if (!lignes.length) { showToast('Aucune quantité à commander.', true); return; }
+      const total = lignes.reduce((s, l) => { const x = (INGR.lignes.find(y => y.ingredientId === l.ingredientId) || {}); return s + l.qte * (x.prixUnitaire || 0); }, 0);
+      confirmerActionAvantExecution('Réapprovisionner les ingrédients', 'Enregistrer ' + lignes.length + ' achat(s) d\'ingrédients pour ' + money(total) + ' et remonter les stocks ?', function () {
+        google.script.run.withSuccessHandler(function (res) {
+          showToast('Ingrédients réapprovisionnés : ' + res.nb + ', ' + money(res.total));
+          chargerIngredients();
+        }).withFailureHandler(onError).reapprovisionnerIngredients(lignes, CURRENT_USER.sessionToken);
+      });
+    }
+    function reapprovisionnerIngredientLigne(id) { envoyerReapproIngredients_(lignesIngredients_(id)); }
+    function reapprovisionnerIngredientsTout() { envoyerReapproIngredients_(lignesIngredients_(null)); }
+    function copierListeIngredients() {
+      const t = (INGR ? INGR.lignes : []).filter(l => l.etat !== 'Disponible').map(l => l.ingredient + ' : ' + l.aCommander + ' ' + l.unite + ' (stock ' + l.stock + ')').join('\n');
+      if (!t) { showToast('Rien à réapprovisionner.'); return; }
+      if (navigator.clipboard) navigator.clipboard.writeText(t).then(() => showToast('Liste copiée.'), () => showToast('Copie impossible.', true));
+      else showToast('Copie impossible sur ce navigateur.', true);
+    }
+    function exporterIngredientsCsv() {
+      const l = (INGR ? INGR.lignes : []).filter(x => x.etat !== 'Disponible');
+      if (!l.length) { showToast('Rien à exporter.'); return; }
+      telechargerCsv_('ingredients-a-commander.csv', [['Ingrédient', 'Unité', 'Stock', 'Seuil', 'À commander', 'Prix unitaire', 'Coût estimé']].concat(l.map(x => [x.ingredient, x.unite, x.stock, x.seuil, x.aCommander, x.prixUnitaire, x.coutEstime])));
+    }
+    function ajusterIngredientUI(id) {
+      const l = (INGR.lignes || []).find(x => x.ingredientId === id); if (!l) return;
+      const v = prompt('Stock réel de « ' + l.ingredient + ' » (' + l.unite + ') ?', l.stock);
+      if (v === null) return;
+      google.script.run.withSuccessHandler(function (r) { showToast('Stock ajusté (' + (r.ecart > 0 ? '+' : '') + r.ecart + ').'); chargerIngredients(); })
+        .withFailureHandler(onError).ajusterStockIngredient(id, Number(v.replace(',', '.')), CURRENT_USER.sessionToken);
+    }
+    function infosIngredientUI(id) {
+      const l = (INGR.lignes || []).find(x => x.ingredientId === id); if (!l) return;
+      const unite = prompt('Unité de « ' + l.ingredient + ' » (portion, cl, g, bouteille...) ?', l.unite); if (unite === null) return;
+      const prix = prompt('Prix d\'achat par ' + unite + ' ($) ?', l.prixUnitaire); if (prix === null) return;
+      const seuil = prompt('Seuil d\'alerte manuel (0 = automatique : ' + l.seuilAuto + ') ?', l.seuilManuel || 0); if (seuil === null) return;
+      google.script.run.withSuccessHandler(function () { showToast('Ingrédient mis à jour.'); chargerIngredients(); })
+        .withFailureHandler(onError).setIngredientInfos(id, unite, Number(prix.replace(',', '.')), Number(seuil.replace(',', '.')), CURRENT_USER.sessionToken);
+    }
+
+    // ----- Recettes -----
+    function chargerRecettes() {
+      if (RECETTES_DATA) { renderRecetteSelecteur(); return; }
+      google.script.run.withSuccessHandler(function (r) { RECETTES_DATA = r; renderRecetteSelecteur(); }).withFailureHandler(onError).getRecettes(CURRENT_USER.sessionToken);
+    }
+    function renderRecetteSelecteur() {
+      const sel = document.getElementById('recette-article');
+      const actuel = sel.value;
+      sel.innerHTML = RECETTES_DATA.articles.slice().sort((a, b) => (a.categorie + a.nom).localeCompare(b.categorie + b.nom)).map(a => `<option value="${a.id}">${escapeHtml(a.categorie)} - ${escapeHtml(a.nom)}</option>`).join('');
+      if (actuel) sel.value = actuel;
+      document.getElementById('recette-ingredients').innerHTML = RECETTES_DATA.ingredients.map(i => `<option value="${escapeHtml(i.nom)}"></option>`).join('');
+      renderRecetteEditeur();
+    }
+    function ligneRecetteHtml_(nom, qte) {
+      return `<tr><td><input class="recette-nom" list="recette-ingredients" value="${escapeHtml(nom)}" placeholder="Ingrédient..." style="width:100%;"></td>
+        <td><input class="recette-qte" type="number" min="0" step="any" value="${qte}" style="width:110px;"></td>
+        <td><a class="linklike" onclick="this.closest('tr').remove()">Retirer</a></td></tr>`;
+    }
+    function renderRecetteEditeur() {
+      const id = document.getElementById('recette-article').value;
+      const lignes = (RECETTES_DATA && RECETTES_DATA.recettes[id]) || [];
+      document.getElementById('recette-lignes').innerHTML = lignes.map(l => ligneRecetteHtml_(l.nom, l.qte)).join('') || '<tr><td colspan="3" class="small">Aucune recette : ajoute des ingrédients.</td></tr>';
+      document.getElementById('recette-err').textContent = '';
+    }
+    function ajouterLigneRecette() {
+      const corps = document.getElementById('recette-lignes');
+      if (corps.querySelector('td[colspan]')) corps.innerHTML = '';
+      corps.insertAdjacentHTML('beforeend', ligneRecetteHtml_('', 1));
+    }
+    function enregistrerRecette() {
+      const id = document.getElementById('recette-article').value;
+      const lignes = [...document.querySelectorAll('#recette-lignes tr')].map(tr => ({ nom: (tr.querySelector('.recette-nom') || {}).value, qte: Number((tr.querySelector('.recette-qte') || {}).value) })).filter(l => l.nom && l.nom.trim());
+      document.getElementById('recette-err').textContent = '';
+      google.script.run.withSuccessHandler(function (r) {
+        showToast('Recette enregistrée' + (r.nouveauxIngredients ? ' (' + r.nouveauxIngredients + ' nouvel ingrédient)' : '') + '.');
+        RECETTES_DATA = null; chargerRecettes(); chargerIngredients();
+      }).withFailureHandler(function (err) { document.getElementById('recette-err').textContent = err.message || String(err); })
+        .setRecetteArticle(id, lignes, CURRENT_USER.sessionToken);
+    }
+
     // ===== Rester connecté =====
     function memoriserSessionLongue_(token) { try { localStorage.setItem('unicorn_session_longue', JSON.stringify({ token: token })); } catch (e) {  } }
     function oublierSessionLongueLocale_() { try { localStorage.removeItem('unicorn_session_longue'); } catch (e) {  } }
@@ -5554,6 +5963,7 @@
         { id: 'agenda', label: 'Agenda', mgmtOnly: false },
         { id: 'chat', label: 'Chat', mgmtOnly: false },
         { id: 'dj', label: 'DJ', mgmtOnly: false },
+        { id: 'rapports-analyses', label: 'Rapports', mgmtOnly: true },
         { id: 'rapports-entreprise', label: 'Rapports Entreprise', mgmtOnly: false, rapportsOnly: true },
         { id: 'section-patron', label: labelPatronSection, mgmtOnly: false, creerOnly: true },
         { id: 'admin', label: 'Admin', mgmtOnly: false, adminSectionOnly: true },
@@ -5835,7 +6245,7 @@
       if (id === ONGLET_ACTUEL) return; 
       if (!antispamNavigation_()) return;
       ONGLET_ACTUEL = id;
-      ['dashboard', 'ventes', 'shifts', 'achats', 'section-patron', 'admin', 'claque', 'articles', 'stock', 'gestion-client', 'objectifs', 'agenda', 'chat', 'dj', 'master-settings', 'rapports-entreprise'].forEach(t => {
+      ['dashboard', 'ventes', 'shifts', 'achats', 'section-patron', 'admin', 'claque', 'articles', 'stock', 'gestion-client', 'objectifs', 'agenda', 'chat', 'dj', 'master-settings', 'rapports-entreprise', 'rapports-analyses'].forEach(t => {
         document.getElementById('tab-' + t).classList.add('hidden');
       });
       document.getElementById('tab-' + id).classList.remove('hidden');
@@ -5855,6 +6265,7 @@
       if (id === 'objectifs') renderObjectifs();
       if (id === 'master-settings') renderMasterSettingsGate();
       if (id === 'rapports-entreprise') chargerRapportEntreprise();
+      if (id === 'rapports-analyses') chargerRapportsAnalyses(RAPPORT_ANALYSE_PERIODE);
       if (id === 'agenda') chargerAgenda();
       if (id === 'chat') { chargerChat(); majBadgeChat(0); } else arreterSondageChat();
       if (id === 'dj') chargerLiensDJ();
@@ -7134,7 +7545,7 @@
         const commandeAffichee = r.Commande ? '<div class="small" style="color:var(--gold);margin-top:4px;">Précommande : ' + escapeHtml(r.Commande) + (Number(r.TotalCommande) > 0 ? ' - ' + money(r.TotalCommande) : '') + '</div>' : '';
         return `<tr><td class="kpi-gold" style="font-weight:700;">${escapeHtml(r.NumeroReservation || '-')}</td><td>${fmtJour_(r.DateReservation)}</td><td>${escapeHtml(fmtHeureResa_(r.Heure))}</td><td>${escapeHtml(r.Nom)}</td><td class="small">${escapeHtml(r.Téléphone)}</td>
           <td>${r.NbPersonnes}</td><td class="small">${commentaireAffiche}${commandeAffichee}</td><td class="${couleurStatut}" style="font-weight:600;">${escapeHtml(r.Statut)}</td>
-          <td>${r.Statut !== 'Confirmée' ? `<a class="linklike" onclick="traiterReservationUI('${r.ID}','Confirmée')">Confirmer</a> ` : ''}${r.Statut !== 'Refusée' ? `<a class="linklike" onclick="traiterReservationUI('${r.ID}','Refusée')">Refuser</a> ` : `<a class="linklike" onclick="modifierRaisonRefusUI('${r.ID}')">Modifier la raison</a> `}<a class="linklike" onclick="supprimerReservationUI('${r.ID}')">Supprimer</a></td></tr>`;
+          <td>${r.Statut === 'Confirmée' && r.CommandeDetail ? (r.CommandeVendue ? '<span class="pill pill-dispo" title="' + escapeHtml(r.CommandeVendue) + '">Encaissée</span> ' : `<a class="linklike" onclick="encaisserPrecommandeUI('${r.ID}')">Encaisser la précommande</a> `) : ''}${r.Statut !== 'Confirmée' ? `<a class="linklike" onclick="traiterReservationUI('${r.ID}','Confirmée')">Confirmer</a> ` : ''}${r.Statut !== 'Refusée' ? `<a class="linklike" onclick="traiterReservationUI('${r.ID}','Refusée')">Refuser</a> ` : `<a class="linklike" onclick="modifierRaisonRefusUI('${r.ID}')">Modifier la raison</a> `}<a class="linklike" onclick="supprimerReservationUI('${r.ID}')">Supprimer</a></td></tr>`;
       }).join('') || '<tr><td colspan="9" class="small">Aucune réservation ici.</td></tr>';
     }
     let RAISON_REFUS_CIBLE = null;
@@ -7596,7 +8007,7 @@
       if (section === 'ventesexport') renderListeItemsExportAdmin();
       if (section === 'absences') chargerAbsencesPatron();
       if (section === 'suspensions') { renderSuspensionsActuelles(); chargerHistoriqueSuspensions(); }
-      if (section === 'paie') { renderPaieTable(); chargerCommissionsSemaine(); }
+      if (section === 'paie') { renderPaieTable(); chargerCommissionsSemaine(); chargerSalairesRole(); }
       if (section === 'contrats') chargerContrats();
       if (section === 'cigares') renderMsCigaresListe();
     }
@@ -8404,6 +8815,8 @@
     const ETAT_STOCK_PILL = { 'Rupture': 'pill-rupture', 'Stock bas': 'pill-bas', 'Disponible': 'pill-dispo', 'Hors service': 'pill-hs' };
     let STOCK_CHARGE = false;
     function chargerStock() {
+      chargerReapprovisionnement();
+      chargerIngredients();
       if (STOCK_CHARGE) { renderStockActuel(); renderStockMouvements(); return; }
       document.getElementById('tbl-stock-actuel').innerHTML = '<tr><td colspan="6" class="small">Chargement...</td></tr>';
       google.script.run.withSuccessHandler(function (lignes) {
@@ -9557,7 +9970,7 @@
     const ONGLETS_DISPONIBLES = [
       ['dashboard', 'Tableau de bord'], ['shifts', 'Shifts'], ['ventes', 'Ventes'], ['achats', 'Dépenses'],
       ['articles', 'Articles'], ['stock', 'Stock'], ['gestion-client', 'Gestion client'], ['objectifs', 'Objectifs'], ['agenda', 'Agenda'],
-      ['chat', 'Chat'], ['dj', 'DJ'], ['rapports-entreprise', 'Rapports Entreprise'],
+      ['chat', 'Chat'], ['dj', 'DJ'], ['rapports-analyses', 'Rapports'], ['rapports-entreprise', 'Rapports Entreprise'],
       ['section-patron', 'Patron'], ['admin', 'Admin'], ['claque', 'Claque'], ['master-settings', 'Master Settings']
     ];
     const SECTIONS_DASHBOARD_DISPONIBLES = [
