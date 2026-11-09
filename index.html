@@ -1348,7 +1348,7 @@
             <svg class="carte-coin hg" aria-hidden="true"><use href="#orn-coin"/></svg><svg class="carte-coin hd" aria-hidden="true"><use href="#orn-coin"/></svg><svg class="carte-coin bg" aria-hidden="true"><use href="#orn-coin"/></svg><svg class="carte-coin bd" aria-hidden="true"><use href="#orn-coin"/></svg>
             <div class="orne-entete"><svg class="orne-orn" aria-hidden="true"><use href="#orn-haut"/></svg><h2 class="orne-titre">Horaires</h2><div class="orne-sous">Quand la nuit commence</div></div>
             <div class="horaires-statut-hero" id="horaires-statut-hero"></div>
-            <div class="horaires-registre" id="vitrine-horaires"></div>
+            <div class="horaires-registre hidden" id="vitrine-horaires"></div>
             <svg class="orne-pied" aria-hidden="true"><use href="#orn-haut"/></svg>
           </div>
         </div>
@@ -4691,8 +4691,8 @@
     }
 
     function calculerStatutOuvertureVitrine_(horaires) {
-      if (DATA && DATA.statutClubManuel === 'ouvert') return { ouvert: true, sousTexte: 'Ouvert exceptionnellement', manuel: true };
-      if (DATA && DATA.statutClubManuel === 'ferme') return { ouvert: false, sousTexte: 'Fermé exceptionnellement', manuel: true };
+      if (DATA && DATA.statutClubManuel === 'ouvert') return { ouvert: true, sousTexte: '', manuel: true };
+      if (DATA && DATA.statutClubManuel === 'ferme') return { ouvert: false, sousTexte: '', manuel: true };
       const versMinutes = hhmm => {
         const p = String(hhmm || '').split(':').map(Number);
         return (p[0] || 0) * 60 + (p[1] || 0);
@@ -4707,15 +4707,15 @@
 
       if (hHier && estValeurVraie_(hHier.Ouvert)) {
         const o = versMinutes(hHier.HeureOuverture), f = versMinutes(hHier.HeureFermeture);
-        if (f < o && minuteActuelle < f) return { ouvert: true, sousTexte: 'Ouvert jusqu\'à ' + hHier.HeureFermeture };
+        if (f < o && minuteActuelle < f) return { ouvert: true, sousTexte: ''};
       }
       if (hAuj && estValeurVraie_(hAuj.Ouvert)) {
         const o = versMinutes(hAuj.HeureOuverture), f = versMinutes(hAuj.HeureFermeture);
         const dansLaPlage = f < o ? minuteActuelle >= o : (minuteActuelle >= o && minuteActuelle < f);
-        if (dansLaPlage) return { ouvert: true, sousTexte: 'Ouvert jusqu\'à ' + hAuj.HeureFermeture };
-        if (minuteActuelle < o) return { ouvert: false, sousTexte: 'Ouvre aujourd\'hui à ' + hAuj.HeureOuverture };
+        if (dansLaPlage) return { ouvert: true, sousTexte: ''};
+        if (minuteActuelle < o) return { ouvert: false, sousTexte: ''};
       }
-      return { ouvert: false, sousTexte: 'Fermé pour l\'instant' };
+      return { ouvert: false, sousTexte: ''};
     }
     // Bloc "Ouvert / Fermé" de la page Horaires (recalculé seul toutes les minutes et à chaque changement manuel).
     function majStatutHorairesVitrine_() {
@@ -4727,7 +4727,7 @@
       heroEl.innerHTML = `
         <span class="horaires-statut-point" style="background:${statut.ouvert ? 'var(--green)' : 'var(--red)'};"></span>
         <span class="horaires-statut-texte">${statut.ouvert ? 'Ouvert' : 'Fermé'}</span>
-        <div class="horaires-statut-sous">${escapeHtml(statut.sousTexte)}</div>
+        ${statut.sousTexte ? '<div class="horaires-statut-sous">' + escapeHtml(statut.sousTexte) + '</div>' : ''}
         <div class="horaires-statut-heure">Il est actuellement ${heureActuelle}</div>`;
     }
     // Les visiteurs (et les clients) voient le statut changer sans recharger la page :
