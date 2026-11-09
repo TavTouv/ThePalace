@@ -989,6 +989,8 @@
     .chat-compose button:hover { opacity: .85; }
     .notif-bell { position: relative; cursor: pointer; font-size: 18px; user-select: none; }
     #tbl-salaires-role td, #tbl-salaires-previsions td { vertical-align: middle; }
+    .reduc-boutons { gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+    .reduc-boutons .filter-btn.actif { background: linear-gradient(135deg, var(--gold), var(--pink-deep)); color: var(--bg); border-color: transparent; font-weight: 700; }
     .statut-club { position: relative; display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; border: 1px solid var(--red); border-radius: 999px; cursor: pointer; user-select: none; font-size: 13px; font-weight: 600; color: var(--text); background: rgba(0,0,0,.2); }
     .statut-club.ouvert { border-color: var(--green); }
     .statut-club-point { width: 9px; height: 9px; border-radius: 50%; background: var(--red); box-shadow: 0 0 8px var(--red); }
@@ -1729,6 +1731,13 @@
               <div id="cart-list"><div class="small">Panier vide.</div></div>
               <label class="mt10">Compte client <span class="small">(facultatif - applique automatiquement la réduction VIP)</span></label>
               <select id="cart-client" onchange="surChangementClientVente_('cart-client', 'CART')"></select>
+              <label class="mt10">Réduction VIP <span class="small">(Silver -5 %, Gold -10 %, Diamond -15 % - total arrondi aux 5 $)</span></label>
+              <div class="flex reduc-boutons" id="cart-reductions">
+                <button type="button" class="filter-btn actif" data-pct="0" onclick="definirReductionPanier_(0)">Aucune</button>
+                <button type="button" class="filter-btn" data-pct="5" onclick="definirReductionPanier_(5)">-5 %</button>
+                <button type="button" class="filter-btn" data-pct="10" onclick="definirReductionPanier_(10)">-10 %</button>
+                <button type="button" class="filter-btn" data-pct="15" onclick="definirReductionPanier_(15)">-15 %</button>
+              </div>
               <div class="small mt10 hidden kpi-gold" id="cart-reduction-info"></div>
               <div class="total-line"><span>Total</span><span id="cart-total">$0</span></div>
               <div class="succursale-field">
@@ -2321,21 +2330,8 @@
         </div>
       </section>
 
-      <section id="tab-stock" class="hidden">
-        <div class="card mb10" id="reappro-carte">
-          <div class="flex-between mb10">
-            <h2 style="margin:0;">À réapprovisionner <span class="small" id="reappro-compte"></span></h2>
-            <div class="flex">
-              <button class="btn-ghost" onclick="copierListeReappro()">Copier la liste</button>
-              <button class="btn-ghost" onclick="exporterReapproCsv()">Exporter CSV</button>
-              <button class="btn-primary" onclick="reapprovisionnerTout()">Tout réapprovisionner</button>
-            </div>
-          </div>
-          <div class="small mb10" id="reappro-info"></div>
-          <div class="table-wrap"><table><thead><tr><th>Article</th><th>Catégorie</th><th>Stock</th><th>Seuil</th><th>À commander</th><th>Coût estimé</th><th></th></tr></thead>
-          <tbody id="reappro-corps"></tbody></table></div>
-          <div class="flex-between mt10"><span class="small">Coût total estimé</span><b class="kpi-gold" id="reappro-total">$0</b></div>
-        </div>
+      <section id="tab-ingredients" class="hidden">
+        <div class="small mb10">Le stock de chaque ingrédient baisse à chaque vente d'un plat ou d'une boisson qui l'utilise. Les alertes se déclenchent quand il reste de quoi faire seulement 15 de chaque boisson ou 5 de chaque plat.</div>
         <div class="card mb10" id="ingr-reappro-carte">
           <div class="flex-between mb10">
             <h2 style="margin:0;">Ingrédients à réapprovisionner <span class="small" id="ingr-reappro-compte"></span></h2>
@@ -2350,7 +2346,7 @@
           <tbody id="ingr-reappro-corps"></tbody></table></div>
           <div class="flex-between mt10"><span class="small">Coût total estimé</span><b class="kpi-gold" id="ingr-reappro-total">$0</b></div>
         </div>
-        <details class="ms-groupe mb10">
+        <details class="ms-groupe mb10" open>
           <summary id="ingr-niveaux-titre">Niveaux d'ingrédients</summary>
           <div class="ms-groupe-corps">
             <div class="table-wrap historique-scroll"><table><thead><tr><th>Ingrédient</th><th>Unité</th><th>Stock</th><th>Seuil d'alerte</th><th>Stock de départ</th><th>État</th><th>Actions</th></tr></thead>
@@ -2369,6 +2365,23 @@
             <div class="err" id="recette-err"></div>
           </div>
         </details>
+      </section>
+
+      <section id="tab-stock" class="hidden">
+        <div class="card mb10" id="reappro-carte">
+          <div class="flex-between mb10">
+            <h2 style="margin:0;">À réapprovisionner <span class="small" id="reappro-compte"></span></h2>
+            <div class="flex">
+              <button class="btn-ghost" onclick="copierListeReappro()">Copier la liste</button>
+              <button class="btn-ghost" onclick="exporterReapproCsv()">Exporter CSV</button>
+              <button class="btn-primary" onclick="reapprovisionnerTout()">Tout réapprovisionner</button>
+            </div>
+          </div>
+          <div class="small mb10" id="reappro-info"></div>
+          <div class="table-wrap"><table><thead><tr><th>Article</th><th>Catégorie</th><th>Stock</th><th>Seuil</th><th>À commander</th><th>Coût estimé</th><th></th></tr></thead>
+          <tbody id="reappro-corps"></tbody></table></div>
+          <div class="flex-between mt10"><span class="small">Coût total estimé</span><b class="kpi-gold" id="reappro-total">$0</b></div>
+        </div>
         <div class="card mb10">
           <div class="flex-between mb10"><h2 style="margin:0;">Niveaux de stock</h2></div>
           <div class="table-wrap"><table><thead><tr><th>Article</th><th class="succursale-field">Succursale</th><th>Stock actuel</th><th>Seuil alerte</th><th>État</th><th>Actions</th></tr></thead>
@@ -4717,8 +4730,10 @@
         <div class="horaires-statut-sous">${escapeHtml(statut.sousTexte)}</div>
         <div class="horaires-statut-heure">Il est actuellement ${heureActuelle}</div>`;
     }
-    // Les visiteurs voient le statut changer sans recharger la page.
-    setInterval(function () {
+    // Les visiteurs (et les clients) voient le statut changer sans recharger la page :
+    //  - recalcul local toutes les 15 s (passage automatique ouvert/fermé selon les horaires, heure affichée) ;
+    //  - relecture du serveur toutes les 30 s (statut forcé par le personnel) et dès que l'onglet redevient visible.
+    function rafraichirStatutClubDistance_() {
       if (document.hidden) return;
       const v = document.getElementById('vitrine-publique');
       if (!v || v.classList.contains('hidden')) return;
@@ -4729,7 +4744,23 @@
         if (d.horairesOuverture) DATA.horairesOuverture = d.horairesOuverture;
         majStatutHorairesVitrine_();
       }).withFailureHandler(function () {}).getInitialData();
-    }, 60000);
+    }
+    setInterval(rafraichirStatutClubDistance_, 30000);
+    setInterval(function () {
+      const v = document.getElementById('vitrine-publique');
+      if (!document.hidden && v && !v.classList.contains('hidden')) majStatutHorairesVitrine_();
+    }, 15000);
+    // Le personnel : le bouton de l'en-tête se recalcule seul (horaires) et suit les changements faits par les collègues.
+    setInterval(function () {
+      const app = document.getElementById('app');
+      if (!document.hidden && app && app.style.display === 'block') renderStatutClubHeader_();
+    }, 15000);
+    document.addEventListener('visibilitychange', function () {
+      if (document.hidden) return;
+      rafraichirStatutClubDistance_();
+      const app = document.getElementById('app');
+      if (app && app.style.display === 'block' && CURRENT_USER && CURRENT_USER.typeCompte !== 'client' && typeof surveillanceGenerale === 'function') { renderStatutClubHeader_(); surveillanceGenerale(); }
+    });
 
     // ===== Bouton Ouvert / Fermé du personnel (en-tête de l'application) =====
     function renderStatutClubHeader_() {
@@ -6024,6 +6055,7 @@
         { id: 'achats', label: t('nav.achats'), mgmtOnly: true },
         { id: 'articles', label: t('nav.articles'), mgmtOnly: true },
         { id: 'stock', label: t('nav.stock'), mgmtOnly: true },
+        { id: 'ingredients', label: 'Ingrédients', mgmtOnly: true },
         { id: 'gestion-client', label: 'Gestion client', mgmtOnly: false },
         { id: 'objectifs', label: t('nav.objectifs'), mgmtOnly: true },
         { id: 'agenda', label: 'Agenda', mgmtOnly: false },
@@ -6311,7 +6343,7 @@
       if (id === ONGLET_ACTUEL) return; 
       if (!antispamNavigation_()) return;
       ONGLET_ACTUEL = id;
-      ['dashboard', 'ventes', 'shifts', 'achats', 'section-patron', 'admin', 'claque', 'articles', 'stock', 'gestion-client', 'objectifs', 'agenda', 'chat', 'dj', 'master-settings', 'rapports-entreprise', 'rapports-analyses'].forEach(t => {
+      ['dashboard', 'ventes', 'shifts', 'achats', 'section-patron', 'admin', 'claque', 'articles', 'stock', 'ingredients', 'gestion-client', 'objectifs', 'agenda', 'chat', 'dj', 'master-settings', 'rapports-entreprise', 'rapports-analyses'].forEach(t => {
         document.getElementById('tab-' + t).classList.add('hidden');
       });
       document.getElementById('tab-' + id).classList.remove('hidden');
@@ -6326,6 +6358,7 @@
       if (id === 'admin') renderAdminOverview();
       if (id === 'claque') chargerClaques();
       if (id === 'stock') chargerStock();
+      if (id === 'ingredients') chargerIngredients();
       if (id === 'gestion-client') switchGestionClientSection('comptes-clients', document.querySelector('#gc-subnav button'));
       if (id === 'articles') renderArticlesAdmin();
       if (id === 'objectifs') renderObjectifs();
@@ -6813,7 +6846,33 @@
         .withFailureHandler(function () {}).getComptesClientsAvecVip();
     }
 
+    // Réduction VIP arrondie : le total remisé est arrondi au multiple de 5 $ INFÉRIEUR (90 $ : -5 % = 85, -10 % = 80, -15 % = 75).
+    function reductionArrondie_(sousTotal, pct) {
+      if (!(pct > 0)) return sousTotal;
+      const brut = Math.round(sousTotal * (1 - pct / 100) * 100) / 100;
+      return Math.max(0, Math.min(sousTotal, Math.floor(brut / 5) * 5));
+    }
+    // Répartit le total arrondi sur les lignes (au centime) pour que la somme des ventes soit exactement le total affiché.
+    function lignesAvecReduction_(lignes, pct) {
+      const sous = lignes.reduce((t, l) => t + l.prixUnitaire * l.qte, 0);
+      const cible = reductionArrondie_(sous, pct);
+      if (!(pct > 0) || sous <= 0) return lignes.map(l => Object.assign({}, l));
+      const f = cible / sous;
+      const totaux = lignes.map(l => Math.round(l.prixUnitaire * l.qte * f * 100) / 100);
+      const ecart = Math.round((cible - totaux.reduce((a, b) => a + b, 0)) * 100) / 100;
+      let iMax = 0; totaux.forEach((t, i) => { if (t > totaux[iMax]) iMax = i; });
+      totaux[iMax] = Math.round((totaux[iMax] + ecart) * 100) / 100;
+      return lignes.map((l, i) => Object.assign({}, l, { prixUnitaire: Math.round(totaux[i] / l.qte * 10000) / 10000 }));
+    }
+    // Réduction du panier : soit détectée sur le compte client (automatique), soit choisie avec les boutons -5 / -10 / -15 %.
+    let REDUCTION_PANIER_MANUELLE = false;
+    function definirReductionPanier_(pct) {
+      REDUCTIONS_VIP_VENTES.CART = pct;
+      REDUCTION_PANIER_MANUELLE = pct > 0;
+      renderCartUI();
+    }
     function surChangementClientVente_(selectId, contexte) {
+      if (contexte === 'CART') REDUCTION_PANIER_MANUELLE = false;
       const clientId = document.getElementById(selectId).value;
       if (!clientId) {
         REDUCTIONS_VIP_VENTES[contexte] = 0;
@@ -6982,6 +7041,7 @@
       CART = [];
       document.getElementById('cart-comment').value = '';
       document.getElementById('cart-tip').value = 0;
+      REDUCTIONS_VIP_VENTES.CART = 0; REDUCTION_PANIER_MANUELLE = false; document.getElementById('cart-client').value = '';
       renderCartUI();
       showToast('Panier vidé.');
     }
@@ -6998,9 +7058,11 @@
       const sousTotalArticles = CART.reduce((s, c) => s + c.prixUnitaire * c.qte, 0);
       const pct = REDUCTIONS_VIP_VENTES.CART;
       const infoEl = document.getElementById('cart-reduction-info');
-      if (pct > 0) { infoEl.textContent = pct + '% VIP appliqué (-' + money(sousTotalArticles * pct / 100) + ')'; infoEl.classList.remove('hidden'); }
+      const totalRemise = reductionArrondie_(sousTotalArticles, pct);
+      if (pct > 0) { infoEl.textContent = pct + ' % VIP : ' + money(sousTotalArticles) + ' → ' + money(totalRemise) + ' (arrondi au multiple de 5 $ inférieur)' + (REDUCTION_PANIER_MANUELLE ? ' - choisi à la main' : ' - détecté sur le compte client'); infoEl.classList.remove('hidden'); }
       else infoEl.classList.add('hidden');
-      document.getElementById('cart-total').textContent = money(sousTotalArticles * (1 - pct / 100) + tip);
+      document.querySelectorAll('#cart-reductions button').forEach(b => b.classList.toggle('actif', Number(b.dataset.pct) === pct));
+      document.getElementById('cart-total').textContent = money(totalRemise + tip);
     }
 
     let VENTE_EN_COURS = false;
@@ -7014,12 +7076,11 @@
     function validerVenteReelle_() {
       if (VENTE_EN_COURS) return;
       VENTE_EN_COURS = true;
-      const commentaire = document.getElementById('cart-comment').value.trim();
+      const pct = REDUCTIONS_VIP_VENTES.CART;
+      const commentaire = document.getElementById('cart-comment').value.trim() + (pct > 0 ? ' [Réduction VIP -' + pct + ' %]' : '');
       const succursaleParDefaut = document.getElementById('cart-succursale').value;
       const tip = Number(document.getElementById('cart-tip').value) || 0;
-      const pct = REDUCTIONS_VIP_VENTES.CART;
-      const facteur = 1 - pct / 100;
-      const lignes = CART.map(c => ({ articleId: c.articleId, articleNom: c.articleNom, qte: c.qte, prixUnitaire: c.prixUnitaire * facteur, succursale: c.succursale || '' }));
+      const lignes = lignesAvecReduction_(CART.map(c => ({ articleId: c.articleId, articleNom: c.articleNom, qte: c.qte, prixUnitaire: c.prixUnitaire, succursale: c.succursale || '' })), pct);
       if (tip > 0) lignes.push({ articleId: '', articleNom: 'Tip', qte: 1, prixUnitaire: tip, succursale: '' });
       google.script.run.withSuccessHandler(function (created) {
         VENTE_EN_COURS = false;
@@ -7029,6 +7090,7 @@
           DATA.ventes.unshift({ ID: r.id, Date: new Date(), EmployéID: CURRENT_USER.ID, Employé: CURRENT_USER['Nom RP'], ArticleID: lignes[i].articleId, Article: lignes[i].articleNom, Qté: lignes[i].qte, 'Prix unitaire ($)': lignes[i].prixUnitaire, 'Total ($)': r.total, Commentaire: commentaire, Succursale: lignes[i].succursale || succursaleParDefaut });
         });
         CART = []; document.getElementById('cart-comment').value = ''; document.getElementById('cart-tip').value = 0;
+        REDUCTIONS_VIP_VENTES.CART = 0; REDUCTION_PANIER_MANUELLE = false; document.getElementById('cart-client').value = '';
         renderCartUI();
         renderVentesTable();
         renderCatalogueCaisse();
@@ -8882,7 +8944,6 @@
     let STOCK_CHARGE = false;
     function chargerStock() {
       chargerReapprovisionnement();
-      chargerIngredients();
       if (STOCK_CHARGE) { renderStockActuel(); renderStockMouvements(); return; }
       document.getElementById('tbl-stock-actuel').innerHTML = '<tr><td colspan="6" class="small">Chargement...</td></tr>';
       google.script.run.withSuccessHandler(function (lignes) {
@@ -10035,7 +10096,7 @@
 
     const ONGLETS_DISPONIBLES = [
       ['dashboard', 'Tableau de bord'], ['shifts', 'Shifts'], ['ventes', 'Ventes'], ['achats', 'Dépenses'],
-      ['articles', 'Articles'], ['stock', 'Stock'], ['gestion-client', 'Gestion client'], ['objectifs', 'Objectifs'], ['agenda', 'Agenda'],
+      ['articles', 'Articles'], ['stock', 'Stock'], ['ingredients', 'Ingrédients'], ['gestion-client', 'Gestion client'], ['objectifs', 'Objectifs'], ['agenda', 'Agenda'],
       ['chat', 'Chat'], ['dj', 'DJ'], ['rapports-analyses', 'Rapports'], ['rapports-entreprise', 'Rapports Entreprise'],
       ['section-patron', 'Patron'], ['admin', 'Admin'], ['claque', 'Claque'], ['master-settings', 'Master Settings']
     ];
