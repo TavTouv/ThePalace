@@ -1019,6 +1019,12 @@
     .statut-club-menu { position: absolute; top: calc(100% + 8px); right: 0; z-index: 1200; min-width: 230px; padding: 6px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; box-shadow: 0 12px 30px rgba(0,0,0,.5); }
     .statut-club-menu button { display: block; width: 100%; text-align: left; padding: 9px 12px; margin: 0; background: transparent; border: none; border-radius: 6px; color: var(--text); font-size: 14px; cursor: pointer; }
     .statut-club-menu button:hover { background: var(--bg-card2); color: var(--gold); }
+    .bilan-gagnant { padding: 10px 12px; border: 1px solid var(--gold); border-radius: 8px; background: rgba(var(--lueur-a), .14); font-size: 14px; }
+    .bilan-ligne { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+    .bilan-rang { width: 26px; text-align: center; font-weight: 700; color: var(--text-mute); flex: none; }
+    .bilan-nom { width: 190px; flex: none; font-weight: 600; line-height: 1.15; }
+    .bilan-nom small, .bilan-qte small { display: block; font-weight: 400; font-size: 11px; color: var(--text-mute); }
+    .bilan-qte { width: 48px; flex: none; text-align: right; font-weight: 700; font-size: 16px; }
     .rap-ligne { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; font-size: 13px; }
     .rap-etiquette { width: 72px; flex: none; color: var(--text-mute); }
     .rap-piste { flex: 1; height: 10px; background: var(--bg-card2); border-radius: 5px; overflow: hidden; }
@@ -2849,6 +2855,31 @@
       </section>
 
       <section id="tab-rapports-analyses" class="hidden">
+        <div class="card mb10" id="bilan-semaine">
+          <div class="flex-between mb10" style="flex-wrap:wrap;gap:8px;">
+            <h2 style="margin:0;">Bilan de la semaine <span class="small" id="bilan-dates"></span></h2>
+            <div class="flex">
+              <button class="btn-ghost" onclick="bilanSemaine_(1)">◀ Semaine précédente</button>
+              <button class="btn-ghost" onclick="bilanSemaine_(0)">Cette semaine</button>
+              <button class="btn-ghost" id="bilan-suivante" onclick="bilanSemaine_(-1)">Semaine suivante ▶</button>
+            </div>
+          </div>
+          <div class="grid grid-2">
+            <div>
+              <div class="bilan-gagnant" id="bilan-gagnant-boissons"></div>
+              <h3 style="margin:10px 0 8px;">Boissons les plus commandées</h3>
+              <div id="bilan-boissons"></div>
+              <div class="small mt10" id="bilan-boissons-total"></div>
+            </div>
+            <div>
+              <div class="bilan-gagnant" id="bilan-gagnant-nourriture"></div>
+              <h3 style="margin:10px 0 8px;">Nourriture la plus commandée</h3>
+              <div id="bilan-nourriture"></div>
+              <div class="small mt10" id="bilan-nourriture-total"></div>
+            </div>
+          </div>
+          <div class="small mt10" id="bilan-pied"></div>
+        </div>
         <div class="card mb10">
           <div class="flex-between mb10">
             <h2 style="margin:0;">Rapports</h2>
@@ -4339,6 +4370,10 @@
             }
           });
         });
+        // Le lundi, la direction est prévenue que le bilan de la semaine écoulée est prêt.
+        if (CURRENT_USER.Permission === 'Direction' && jourSemaineFR_() === 1 && vues.indexOf('bilan-' + aujourdhuiFR_()) === -1) {
+          notifs.push({ id: 'bilan-' + aujourdhuiFR_(), categorie: 'Bilan', texte: 'Le bilan de la semaine écoulée est prêt : les boissons et plats les plus commandés', couleur: 'var(--gold)', cible: function () { switchTab('rapports-analyses', document.getElementById('nav-tab-rapports-analyses')); bilanSemaine_(1 - BILAN_DECALAGE); } });
+        }
         // Demandes d'accès admin du serveur à valider (visibles seulement de ceux qui peuvent créer des accès).
         (DATA.demandesAdminEnAttente || []).forEach(d => {
           notifs.push({ id: 'adminreq-' + d.ID, categorie: 'Accès admin', texte: 'Demande d\'accès admin : ' + d.Nom + ' (' + d.Identifiant + ')', couleur: 'var(--red)', cible: function () {
@@ -5100,7 +5135,7 @@
     function chargerPlanning() { chargerMesShiftsPlanifies_(); chargerSemainePlanning_(); }
     function chargerMesShiftsPlanifies_() {
       google.script.run.withSuccessHandler(function (l) {
-        const aujourdhui = new Date().toISOString().slice(0, 10);
+        const aujourdhui = aujourdhuiFR_();
         document.getElementById('planning-mes-liste').innerHTML = l.map(x => `<div class="resa-espace"><div><b>${x.enCours ? 'En cours' : fmtJour_(x.jour + 'T12:00:00')}</b> - ${escapeHtml(x.debut)} → ${escapeHtml(x.fin)}${x.note ? ' <span class="small">(' + escapeHtml(x.note) + ')</span>' : ''}</div><span class="pill ${x.enCours ? 'pill-dispo' : 'pill-bas'}">${x.enCours ? 'Maintenant' : (x.dansHeures <= 24 ? 'Bientôt' : 'Planifié')}</span></div>`).join('') || 'Aucun shift planifié pour toi pour le moment.';
       }).withFailureHandler(function () {}).getMesShiftsPlanifies(CURRENT_USER.sessionToken);
     }
@@ -5119,7 +5154,7 @@
       const r = PLANNING; if (!r) return;
       document.getElementById('planning-copier').classList.toggle('hidden', !r.peutGerer);
       document.getElementById('planning-titre').textContent = 'Semaine du ' + fmtJour_(r.jours[0] + 'T12:00:00') + ' au ' + fmtJour_(r.jours[6] + 'T12:00:00');
-      const aujourdhui = new Date().toISOString().slice(0, 10);
+      const aujourdhui = aujourdhuiFR_();
       const jourCourt = j => { const d = new Date(j + 'T12:00:00'); return d.toLocaleDateString('fr-FR', { weekday: 'short' }).replace('.', '') + ' ' + d.getDate() + '/' + String(d.getMonth() + 1).padStart(2, '0'); };
       document.getElementById('planning-tete').innerHTML = '<tr><th>Employé</th>' + r.jours.map(j => `<th class="${j === aujourdhui ? 'plan-auj' : ''}">${jourCourt(j)}</th>`).join('') + '<th>Total</th></tr>';
       document.getElementById('planning-corps').innerHTML = r.employes.map(e => {
@@ -5256,6 +5291,47 @@
       if (decision === 'Acceptée') confirmerActionAvantExecution('Accorder l\'accès', 'Donner à cette personne un accès en lecture seule à toute la compta ?', function () { lancer(''); });
       else { const raison = prompt('Raison du refus (facultatif) :', ''); if (raison === null) return; lancer(raison); }
     }
+
+
+    // ===== Bilan de la semaine : le plus commandé en boissons et en nourriture =====
+    let BILAN_DECALAGE = 0;
+    function bilanSemaine_(delta) {
+      if (delta === 0) BILAN_DECALAGE = 0; else BILAN_DECALAGE = Math.max(0, BILAN_DECALAGE + delta);
+      chargerBilanSemaine_();
+    }
+    function chargerBilanSemaine_() {
+      document.getElementById('bilan-boissons').innerHTML = '<div class="small">Chargement...</div>';
+      google.script.run.withSuccessHandler(renderBilanSemaine_).withFailureHandler(onError).getBilanSemaine(BILAN_DECALAGE, CURRENT_USER.sessionToken);
+    }
+    function variationBilan_(cur, prec, unite) {
+      if (prec > 0) { const p = Math.round((cur - prec) / prec * 100); return ' <span class="' + (p >= 0 ? 'kpi-green' : 'kpi-red') + '">(' + (p > 0 ? '+' : '') + p + ' % vs semaine précédente)</span>'; }
+      return cur > 0 ? ' <span class="small">(rien la semaine précédente)</span>' : '';
+    }
+    function lignesBilan_(top) {
+      const max = top.length ? top[0].qte : 1;
+      return top.map(x => `<div class="bilan-ligne"><span class="bilan-rang">${x.rang <= 3 ? ['🥇', '🥈', '🥉'][x.rang - 1] : x.rang}</span>
+        <span class="bilan-nom">${escapeHtml(x.article)}<small>${escapeHtml(x.categorie)}</small></span>
+        <span class="rap-piste"><span class="rap-barre" style="width:${Math.round(x.qte / max * 100)}%"></span></span>
+        <span class="bilan-qte">${x.qte}<small>${x.part} %</small></span></div>`).join('') || '<div class="small">Aucune vente cette semaine.</div>';
+    }
+    function renderBilanSemaine_(r) {
+      document.getElementById('bilan-dates').textContent = 'du ' + fmtJour_(r.lundi + 'T12:00:00') + ' au ' + fmtJour_(r.dimanche + 'T12:00:00') + (r.enCours ? ' - en cours' : ' - terminée');
+      document.getElementById('bilan-suivante').disabled = r.decalage === 0;
+      const gagnant = (el, g, libelle) => {
+        document.getElementById(el).innerHTML = g.top.length ? `🥇 <b>${libelle} n°1 :</b> ${escapeHtml(g.top[0].article)} - ${g.top[0].qte} commandé${g.top[0].qte > 1 ? 's' : ''} (${g.top[0].part} % du total)` : '';
+        document.getElementById(el).classList.toggle('hidden', !g.top.length);
+      };
+      gagnant('bilan-gagnant-boissons', r.boissons, 'Boisson'); gagnant('bilan-gagnant-nourriture', r.nourriture, 'Plat');
+      document.getElementById('bilan-boissons').innerHTML = lignesBilan_(r.boissons.top);
+      document.getElementById('bilan-nourriture').innerHTML = lignesBilan_(r.nourriture.top);
+      document.getElementById('bilan-boissons-total').innerHTML = '<b>' + r.boissons.qte + '</b> boissons vendues - ' + money(r.boissons.ca) + variationBilan_(r.boissons.qte, r.boissons.qtePrecedente);
+      document.getElementById('bilan-nourriture-total').innerHTML = '<b>' + r.nourriture.qte + '</b> plats vendus - ' + money(r.nourriture.ca) + variationBilan_(r.nourriture.qte, r.nourriture.qtePrecedente);
+      document.getElementById('bilan-pied').textContent = r.meilleurJour ? 'Jour le plus chargé : ' + fmtJour_(r.meilleurJour.jour + 'T12:00:00') + ' (' + money(r.meilleurJour.ca) + ' de boissons et de nourriture).' : '';
+    }
+
+    // Jour et jour de la semaine d'aujourd'hui en heure française (et non en UTC : entre minuit et 1-2 h du matin, la date UTC retarde d'un jour).
+    function aujourdhuiFR_() { return new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Paris', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date()); }
+    function jourSemaineFR_() { return new Date(aujourdhuiFR_() + 'T12:00:00Z').getUTCDay(); }
 
     // ===== Rester connecté =====
     function memoriserSessionLongue_(token) { try { localStorage.setItem('unicorn_session_longue', JSON.stringify({ token: token })); } catch (e) {  } }
@@ -5609,7 +5685,7 @@
         renderStatutReservation_();
       }
 
-      document.getElementById('resa-date').min = new Date().toISOString().slice(0, 10);
+      document.getElementById('resa-date').min = aujourdhuiFR_();
       appliquerPageClientActive_();
       document.getElementById('vitrine-publique').classList.remove('hidden');
       allerPageVitrine('accueil');
@@ -6954,7 +7030,7 @@
       const maintenant = new Date();
       const parts = {};
       new Intl.DateTimeFormat('en-US', {
-        timeZone: 'America/Toronto', year: 'numeric', month: '2-digit', day: '2-digit',
+        timeZone: 'Europe/Paris', year: 'numeric', month: '2-digit', day: '2-digit',
         weekday: 'short', timeZoneName: 'shortOffset'
       }).formatToParts(maintenant).forEach(p => { parts[p.type] = p.value; });
       const joursIndex = { Mon: 0, Tue: 1, Wed: 2, Thu: 3, Fri: 4, Sat: 5, Sun: 6 };
@@ -7050,7 +7126,7 @@
       if (id === 'objectifs') renderObjectifs();
       if (id === 'master-settings') renderMasterSettingsGate();
       if (id === 'rapports-entreprise') chargerRapportEntreprise();
-      if (id === 'rapports-analyses') chargerRapportsAnalyses(RAPPORT_ANALYSE_PERIODE);
+      if (id === 'rapports-analyses') { chargerRapportsAnalyses(RAPPORT_ANALYSE_PERIODE); chargerBilanSemaine_(); }
       if (id === 'cloture') chargerCloture();
       if (id === 'planning') chargerPlanning();
       if (id === 'reglement') chargerReglement();
@@ -7390,7 +7466,7 @@
         return;
       }
 
-      const aujourdhui = new Date().toISOString().slice(0, 10);
+      const aujourdhui = aujourdhuiFR_();
       const evsJour = (DATA.agenda || []).filter(e => (e.DateEvenement || '').slice(0, 10) === aujourdhui);
       document.getElementById('dash-evenements-jour').innerHTML = evsJour.map(e =>
         `<div class="small mb10">${e.Heure ? e.Heure + ' - ' : ''}${escapeHtml(e.Titre)}</div>`
@@ -7714,6 +7790,13 @@
       const btnAutres = document.getElementById('ventes-btn-autres');
       if (btnAutres) btnAutres.classList.toggle('hidden', !aDesAutres);
       if (!aDesAutres && CATALOGUE_CATEGORIE === 'Autres') CATALOGUE_CATEGORIE = 'Soft';
+      // Les rubriques sans aucun article (ex. Alcools, Entrées après la réduction de la carte) disparaissent de la caisse.
+      const boutonsCat = [...document.querySelectorAll('#ventes-mode-boutons button')].map(b => ({ b: b, m: /changerModeVente\('normale', this, '([^']+)'\)/.exec(b.getAttribute('onclick') || '') })).filter(x => x.m && x.m[1] !== 'Autres');
+      boutonsCat.forEach(x => x.b.classList.toggle('hidden', !visibles.some(i => categorieCaisse_(i.Catégorie) === x.m[1])));
+      if (CATALOGUE_CATEGORIE !== 'Autres' && !visibles.some(i => categorieCaisse_(i.Catégorie) === CATALOGUE_CATEGORIE)) {
+        const premier = boutonsCat.find(x => !x.b.classList.contains('hidden'));
+        if (premier) { CATALOGUE_CATEGORIE = premier.m[1]; document.querySelectorAll('#ventes-mode-boutons button').forEach(b => b.classList.remove('active')); premier.b.classList.add('active'); }
+      }
 
       // Une recherche cherche dans TOUTES les catégories ; sans recherche, on filtre sur la catégorie choisie.
       const items = recherche
@@ -9812,7 +9895,7 @@
       const montant = Number(document.getElementById('obj-montant').value);
       const periode = document.getElementById('obj-periode').value;
       const periodeJours = parseInt(periode, 10) || 30;
-      const dateDebut = document.getElementById('obj-date').value || new Date().toISOString().slice(0, 10);
+      const dateDebut = document.getElementById('obj-date').value || aujourdhuiFR_();
       const comment = document.getElementById('obj-comment').value;
       if (!intitule || !montant) { showToast('Intitulé et montant requis.', true); return; }
       google.script.run.withSuccessHandler(function (r) {
@@ -10150,7 +10233,7 @@
       renderAgendaCouleurChoix();
     }
     function ouvrirModaleEvenement(dateStr) {
-      EVENEMENT_MODAL_DATE = dateStr || new Date().toISOString().slice(0, 10);
+      EVENEMENT_MODAL_DATE = dateStr || aujourdhuiFR_();
       const d = new Date(EVENEMENT_MODAL_DATE + 'T00:00:00');
       document.getElementById('evenement-modal-date').textContent = d.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
       document.getElementById('agenda-titre').value = '';
@@ -10397,7 +10480,7 @@
     }
     function ajouterEvenement() {
       const titre = document.getElementById('agenda-titre').value.trim();
-      const date = EVENEMENT_MODAL_DATE || new Date().toISOString().slice(0, 10);
+      const date = EVENEMENT_MODAL_DATE || aujourdhuiFR_();
       const heure = document.getElementById('agenda-heure').value;
       const description = document.getElementById('agenda-description').value.trim();
       const type = document.getElementById('agenda-type').value;
