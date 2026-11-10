@@ -989,6 +989,17 @@
     .chat-compose button:hover { opacity: .85; }
     .notif-bell { position: relative; cursor: pointer; font-size: 18px; user-select: none; }
     #tbl-salaires-role td, #tbl-salaires-previsions td { vertical-align: middle; }
+    .planning-table th, .planning-table td { text-align: left; vertical-align: top; min-width: 112px; }
+    .planning-table th:first-child, .planning-table td:first-child { min-width: 150px; }
+    .planning-table .plan-auj { background: rgba(var(--lueur-a), .12); }
+    .planning-table tr.plan-moi td:first-child { box-shadow: inset 3px 0 0 var(--gold); }
+    .plan-chip { display: block; margin-bottom: 4px; padding: 4px 8px; border: 1px solid var(--border); border-radius: 6px; background: rgba(var(--lueur-a), .18); font-size: 12.5px; font-weight: 600; cursor: pointer; }
+    .plan-chip small { display: block; font-weight: 400; color: var(--text-mute); }
+    .plan-absent { display: block; margin-bottom: 4px; padding: 4px 8px; border-radius: 6px; background: rgba(120,120,120,.25); color: var(--text-mute); font-size: 12px; }
+    .plan-plus { padding: 0 8px; min-height: 0; font-size: 14px; line-height: 20px; opacity: .45; background: transparent; border: 1px dashed var(--border); border-radius: 6px; color: var(--text-mute); cursor: pointer; }
+    .plan-plus:hover { opacity: 1; color: var(--gold); border-color: var(--gold); }
+    .rappel-resa { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 0 auto 14px; max-width: 1100px; padding: 12px 16px; border: 1px solid var(--gold); border-radius: 10px; background: rgba(var(--lueur-a), .16); }
+    .regl-texte p { margin: 0 0 12px; line-height: 1.55; }
     .soirees-grille { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 520px)); justify-content: center; gap: 16px; margin-top: 8px; }
     .soiree-carte { position: relative; display: flex; gap: 16px; padding: 18px; border: 1px solid var(--border); border-radius: 12px; background: rgba(var(--lueur-a), .06); }
     .soiree-date { flex: none; align-self: flex-start; width: 70px; text-align: center; border: 1px solid var(--gold); border-radius: 10px; padding: 8px 4px; color: var(--gold); }
@@ -1320,6 +1331,7 @@
 
     <div class="vitrine-corps">
       
+      <div id="vitrine-rappel" class="rappel-resa hidden"></div>
       <div id="vitrine-page-accueil" class="vitrine-page">
         <div class="vit-cadre">
           <svg class="carte-coin hg" aria-hidden="true"><use href="#orn-coin"/></svg><svg class="carte-coin hd" aria-hidden="true"><use href="#orn-coin"/></svg><svg class="carte-coin bg" aria-hidden="true"><use href="#orn-coin"/></svg><svg class="carte-coin bd" aria-hidden="true"><use href="#orn-coin"/></svg>
@@ -1374,6 +1386,13 @@
           <div class="carte-diviseur">◆</div>
         </div>
         <div class="carte-grille" id="vitrine-menu"></div>
+      </div>
+
+      <div id="vitrine-page-reglement" class="vitrine-page hidden">
+        <div class="orne-page orne-large">
+          <div class="orne-entete"><svg class="orne-orn" aria-hidden="true"><use href="#orn-haut"/></svg><h2 class="orne-titre">Règlement intérieur</h2><div class="orne-sous">Pour que chaque soirée reste un plaisir</div></div>
+          <div id="vitrine-reglement" class="regl-texte" style="max-width:760px;margin:0 auto;"></div>
+        </div>
       </div>
 
       <div id="vitrine-page-soirees" class="vitrine-page hidden">
@@ -1456,6 +1475,10 @@
           <button class="btn-ghost mt10" onclick="allerPageVitrine('reserver')">Faire une nouvelle réservation</button>
         </div>
         <div class="mt16">
+          <h2>Mes achats</h2>
+          <div id="moncompte-achats"></div>
+        </div>
+        <div class="mt16">
           <h2>Prochaines soirées</h2>
           <div id="moncompte-soirees"></div>
         </div>
@@ -1506,6 +1529,23 @@
         <div class="small mt16" style="text-align:center;" id="login-lien-inscription">
           Pas encore de compte ? <a class="linklike" onclick="basculerInscriptionClient()">Créer un compte client</a>
         </div>
+        <div class="small mt10" id="login-lien-admin" style="text-align:center;">Admin du serveur ? <a class="linklike" onclick="basculerDemandeAdmin()">Demander un accès en lecture seule</a></div>
+      </div>
+      <div id="login-demande-admin" class="hidden">
+        <div class="small mb10">Réservé aux admins du serveur. Ta demande est envoyée à la propriétaire du club : <b>tu ne pourras te connecter qu'après sa validation</b>. Tu auras alors un accès en <b>lecture seule</b> à toute la compta.</div>
+        <label>Identifiant souhaité</label>
+        <input id="da-identifiant" placeholder="prenom.nom" autocomplete="off">
+        <label class="mt10">Mot de passe (8 caractères minimum)</label>
+        <div class="password-wrap"><input id="da-pwd" type="password" placeholder="Choisis-le toi-même" autocomplete="new-password">
+        <button type="button" class="eye-btn" onclick="togglePasswordVisibility('da-pwd', this)">Afficher</button></div>
+        <label class="mt10">Ton nom ou pseudo d'admin</label>
+        <input id="da-nom" placeholder="Ex : Dr Nova (admin GTA)" maxlength="60">
+        <label class="mt10">Message pour la propriétaire (facultatif)</label>
+        <input id="da-message" placeholder="Ex : admin du serveur, ID Discord..." maxlength="300">
+        <button class="btn-primary btn-block mt16" onclick="demanderAccesAdminUI()">Envoyer ma demande</button>
+        <div class="err" id="da-err"></div>
+        <div class="small mt10" id="da-ok" style="color:var(--green);"></div>
+        <div class="small mt16" style="text-align:center;"><a class="linklike" onclick="basculerDemandeAdmin()">Retour à la connexion</a></div>
       </div>
       <div id="login-inscription-client" class="hidden">
         <div class="small mb10">Un compte client te permet de suivre ton statut VIP directement depuis ton propre compte.</div>
@@ -1520,6 +1560,7 @@
         <input id="inscription-prenom" placeholder="Ton prénom">
         <label class="mt10">Téléphone</label>
         <input id="inscription-telephone" placeholder="555-XXX-XXX ou 555-XXX-XXXX" value="555-" oninput="formaterTelephone_(this)" onfocus="formaterTelephone_(this)">
+        <label class="rester-connecte mt10 hidden" id="inscr-reglement" for="inscription-reglement"><input type="checkbox" id="inscription-reglement"><span class="rester-case" aria-hidden="true"></span><span>J'ai lu et j'accepte le <a class="linklike" onclick="event.preventDefault(); ouvrirReglementDepuisInscription()">règlement intérieur</a></span></label>
         <button class="btn-primary btn-block mt16" onclick="creerCompteClientUI()">Créer mon compte</button>
         <div class="err" id="inscription-err"></div>
         <div class="small mt16" style="text-align:center;"><a class="linklike" onclick="basculerInscriptionClient()">Retour à la connexion</a></div>
@@ -1944,6 +1985,7 @@
           <button class="ms-sidebar-item" onclick="switchPatronSection('suspensions', this)">Suspensions<span id="patron-onglet-suspensions-badge" style="color:var(--red);font-weight:700;"></span></button>
           <button class="ms-sidebar-item" onclick="switchPatronSection('paie', this)">Paie</button>
           <button class="ms-sidebar-item" id="patron-onglet-contrats-btn" onclick="switchPatronSection('contrats', this)">Contrats</button>
+          <button class="ms-sidebar-item" onclick="switchPatronSection('accesadmin', this)">Accès admin<span id="patron-onglet-accesadmin-badge" style="color:var(--gold);font-weight:700;"></span></button>
         </div>
         <div class="ms-content">
 
@@ -2171,6 +2213,15 @@
             <tbody id="tbl-paie"></tbody></table></div>
             </div>
           </details>
+        </div>
+
+        <div id="patron-sub-accesadmin" class="hidden">
+          <div class="card mb10">
+            <h2 style="margin:0 0 6px;">Demandes d'accès des admins du serveur</h2>
+            <div class="small mb10">Les admins du serveur GTA demandent un accès depuis l'écran de connexion. <b>Tant que tu ne l'as pas accepté, ils ne voient rien.</b> Une fois accepté, le compte a le rôle « Admin » : lecture seule de toute la compta, aucune action possible (le serveur le refuse). Tu peux ensuite le suspendre ou le virer depuis l'onglet Employés.</div>
+            <div class="table-wrap"><table><thead><tr><th>Nom</th><th>Identifiant</th><th>Message</th><th>Demande</th><th></th></tr></thead><tbody id="tbl-demandes-admin"></tbody></table></div>
+          </div>
+          <details class="ms-groupe mb10"><summary>Demandes déjà traitées</summary><div class="ms-groupe-corps"><div class="table-wrap"><table><thead><tr><th>Nom</th><th>Identifiant</th><th>Décision</th><th>Par</th></tr></thead><tbody id="tbl-demandes-admin-traitees"></tbody></table></div></div></details>
         </div>
 
         <div id="patron-sub-contrats" class="hidden">
@@ -2460,7 +2511,7 @@
           </div>
           <div class="card">
             <h2>Comptes clients existants</h2>
-            <div class="table-wrap"><table><thead><tr><th>Nom</th><th>Identifiant</th><th>Téléphone</th><th>Statut VIP</th><th>Actions</th></tr></thead>
+            <div class="table-wrap"><table><thead><tr><th>Nom</th><th>Identifiant</th><th>Téléphone</th><th>Statut VIP</th><th>Dépensé</th><th>Dernier passage</th><th>Actions</th></tr></thead>
             <tbody id="tbl-comptes-clients"></tbody></table></div>
           </div>
         </div>
@@ -2707,7 +2758,7 @@
           <div class="flex mt10" id="cloture-actions"></div>
           <div class="err" id="cloture-err"></div>
         </div>
-        <div class="card mt16"><h2 style="margin:0 0 10px;">Historique des clôtures</h2><div class="table-wrap"><table><thead><tr><th>Soirée</th><th>Ventes</th><th>Pourboires</th><th>Employés</th><th>Statut</th><th></th></tr></thead><tbody id="cloture-historique"></tbody></table></div></div>
+        <div class="card mt16"><h2 style="margin:0 0 10px;">Historique des clôtures</h2><div class="table-wrap"><table><thead><tr><th>Soirée</th><th>Argent fait</th><th>Total avec pourboires</th><th>Caisse comptée</th><th>Partage des pourboires</th><th>Statut</th><th></th></tr></thead><tbody id="cloture-historique"></tbody></table></div></div>
       </section>
 
       <section id="tab-liste-noire" class="hidden">
@@ -2752,6 +2803,51 @@
         <div class="card"><h2 style="margin:0 0 10px;">Soirées</h2><div class="table-wrap"><table><thead><tr><th>Date</th><th>Titre</th><th>DJ</th><th>Visible</th><th></th></tr></thead><tbody id="so-liste"></tbody></table></div></div>
       </section>
 
+      <section id="tab-planning" class="hidden">
+        <div class="card mb10">
+          <h2 style="margin:0 0 8px;">Mes prochains shifts</h2>
+          <div id="planning-mes-liste" class="small">Chargement...</div>
+        </div>
+        <div class="card">
+          <div class="flex-between mb10">
+            <h2 style="margin:0;">Planning de la semaine</h2>
+            <div class="flex" style="align-items:center;">
+              <button class="btn-ghost" onclick="planningSemaine_(-1)" title="Semaine précédente">◀</button>
+              <b id="planning-titre" style="min-width:190px;text-align:center;"></b>
+              <button class="btn-ghost" onclick="planningSemaine_(1)" title="Semaine suivante">▶</button>
+              <button class="btn-ghost" onclick="planningSemaine_(0)">Cette semaine</button>
+              <button class="btn-ghost hidden" id="planning-copier" onclick="copierPlanningUI()">Recopier la semaine précédente</button>
+            </div>
+          </div>
+          <div class="table-wrap"><table class="planning-table"><thead id="planning-tete"></thead><tbody id="planning-corps"></tbody></table></div>
+          <div class="small mt10">Un shift de nuit (ex. 18:00 → 02:00) est rattaché au jour de départ. « Absent » = absence approuvée.</div>
+        </div>
+      </section>
+
+      <section id="tab-reglement" class="hidden">
+        <div class="card mb10" id="regl-employe-carte">
+          <div class="flex-between mb10"><h2 style="margin:0;">Règlement intérieur du personnel</h2><span id="regl-statut"></span></div>
+          <div id="regl-employe-texte" class="regl-texte"></div>
+          <div class="flex mt10"><button class="btn-primary hidden" id="regl-accepter" onclick="accepterReglementUI()">J'ai lu et j'accepte le règlement</button></div>
+        </div>
+        <div class="card mb10 hidden" id="regl-client-apercu"><h2 style="margin:0 0 8px;">Règlement des clients <span class="small">(tel qu'affiché sur le site)</span></h2><div id="regl-client-texte" class="regl-texte"></div></div>
+        <div class="card mb10 hidden" id="regl-edition">
+          <h2 style="margin:0 0 6px;">Modifier les règlements <span class="small">(direction)</span></h2>
+          <div class="small mb10">Les règlements sont masqués tant que tu ne coches pas « Publier ». Quand tu modifies le texte du personnel, chacun doit l'accepter de nouveau.</div>
+          <label>Règlement des clients</label>
+          <textarea id="regl-client-edit" rows="9"></textarea>
+          <label class="rester-connecte mt10" for="regl-client-pub"><input type="checkbox" id="regl-client-pub"><span class="rester-case" aria-hidden="true"></span><span>Publier sur le site (page « Règlement »)</span></label>
+          <button class="btn-primary mt10" onclick="enregistrerReglementUI('client')">Enregistrer le règlement des clients</button>
+          <label class="mt16">Règlement du personnel</label>
+          <textarea id="regl-employe-edit" rows="9"></textarea>
+          <label class="rester-connecte mt10" for="regl-employe-pub"><input type="checkbox" id="regl-employe-pub"><span class="rester-case" aria-hidden="true"></span><span>Publier au personnel</span></label>
+          <button class="btn-primary mt10" onclick="enregistrerReglementUI('employe')">Enregistrer le règlement du personnel</button>
+          <div class="err" id="regl-err"></div>
+          <h3 class="mt16" style="margin-bottom:6px;">Qui a accepté la version actuelle ?</h3>
+          <div class="table-wrap"><table><thead><tr><th>Employé</th><th>Rôle</th><th>Statut</th></tr></thead><tbody id="regl-suivi"></tbody></table></div>
+        </div>
+      </section>
+
       <section id="tab-rapports-analyses" class="hidden">
         <div class="card mb10">
           <div class="flex-between mb10">
@@ -2775,7 +2871,8 @@
           <div class="card"><h2 style="margin:0 0 10px;">Heures de pointe</h2><div id="rap-heures"></div></div>
           <div class="card"><h2 style="margin:0 0 10px;">Chiffre d'affaires par jour</h2><div id="rap-jours"></div></div>
         </div>
-        <div class="grid grid-3 mt16">
+        <div class="grid grid-2 mt16">
+          <div class="card"><h2 style="margin:0 0 10px;">Meilleurs clients</h2><div class="table-wrap"><table><thead><tr><th>Client</th><th>Achats</th><th>Dépensé</th></tr></thead><tbody id="rap-clients"></tbody></table></div><div class="small mt10">Uniquement les ventes rattachées à un compte client.</div></div>
           <div class="card"><h2 style="margin:0 0 10px;">Équipe</h2><div class="table-wrap"><table><thead><tr><th>Employé</th><th>Ventes</th><th>CA</th></tr></thead><tbody id="rap-equipe"></tbody></table></div></div>
           <div class="card"><h2 style="margin:0 0 10px;">VIP et précommandes</h2><div id="rap-vip"></div></div>
           <div class="card"><h2 style="margin:0 0 10px;">Stock</h2><div id="rap-stock"></div></div>
@@ -3441,6 +3538,19 @@
     </div>
   </div>
 
+  <div id="planning-modal" class="modal-overlay hidden">
+    <div class="modal-card" style="max-width:420px;">
+      <h2 style="margin:0 0 10px;" id="pl-titre">Shift</h2>
+      <input type="hidden" id="pl-id">
+      <label>Employé</label><select id="pl-employe"></select>
+      <label class="mt10">Jour</label><input type="date" id="pl-jour">
+      <div class="grid grid-2 mt10"><div><label>Début</label><input type="time" id="pl-debut" value="18:00"></div><div><label>Fin</label><input type="time" id="pl-fin" value="02:00"></div></div>
+      <label class="mt10">Note (facultatif)</label><input id="pl-note" maxlength="80" placeholder="Ex : Bar, Scène, Sécurité entrée...">
+      <div class="flex mt16"><button class="btn-primary" onclick="enregistrerShiftPlanning_(false)">Enregistrer</button><button class="btn-ghost hidden" id="pl-supprimer" onclick="supprimerShiftPlanning_()">Supprimer</button><button class="btn-ghost" onclick="document.getElementById('planning-modal').classList.add('hidden')">Annuler</button></div>
+      <div class="err" id="pl-err"></div>
+    </div>
+  </div>
+
   <div id="profil-modal" class="modal-overlay hidden">
     <div class="modal-card">
       <button class="btn-ghost" style="float:right;" onclick="fermerProfil()">Fermer</button>
@@ -3753,7 +3863,7 @@
           if (typeof original !== 'function') return original;
           return function (...args) {
 
-            if (typeof prop === 'string' && !FONCTIONS_LECTURE_SEULE.has(prop) && !FONCTIONS_MODERATION.has(prop) && estRoleAdminLectureSeule()) {
+            if (typeof prop === 'string' && !FONCTIONS_LECTURE_SEULE.has(prop) && !FONCTIONS_MODERATION.has(prop) && !/^(get|peut|identifiant|heartbeat|login|envoyerPing|rechercher|reprendre|deconnecter)/.test(prop) && estRoleAdminLectureSeule()) {
               showToast('Accès en lecture seule avec ce rôle - aucune action possible.', true);
               return;
             }
@@ -4119,6 +4229,10 @@
         if (CURRENT_USER.typeCompte !== 'client') {
           if (typeof resultat.statutClubManuel === 'string' && resultat.statutClubManuel !== (DATA.statutClubManuel || '')) { DATA.statutClubManuel = resultat.statutClubManuel; renderStatutClubHeader_(); }
           DATA.comptesClientsRecents = resultat.comptesClientsRecents || [];
+          DATA.reservationsARappeler = resultat.reservationsARappeler || [];
+          DATA.demandesAdminEnAttente = resultat.demandesAdminEnAttente || [];
+          DATA.monProchainShift = resultat.monProchainShift || null;
+          if (typeof resultat.reglementAAccepter === 'boolean') DATA.reglementAAccepter = resultat.reglementAAccepter;
           DATA.vipDemandesAttente = resultat.demandesVipEnAttente || [];
           DATA.vipExpirant = resultat.vipExpirant || [];
           const nbDemandesVip = DATA.vipDemandesAttente.length;
@@ -4225,6 +4339,33 @@
             }
           });
         });
+        // Demandes d'accès admin du serveur à valider (visibles seulement de ceux qui peuvent créer des accès).
+        (DATA.demandesAdminEnAttente || []).forEach(d => {
+          notifs.push({ id: 'adminreq-' + d.ID, categorie: 'Accès admin', texte: 'Demande d\'accès admin : ' + d.Nom + ' (' + d.Identifiant + ')', couleur: 'var(--red)', cible: function () {
+            switchTab('section-patron', document.getElementById('nav-tab-section-patron'));
+            const btn = document.querySelector('#patron-subnav button[onclick*="accesadmin"]');
+            if (btn) switchPatronSection('accesadmin', btn);
+          } });
+        });
+        // Réservations confirmées d'aujourd'hui ou de demain à rappeler.
+        (DATA.reservationsARappeler || []).forEach(r => {
+          notifs.push({
+            id: 'rappel-' + r.ID, categorie: 'Rappels', texte: 'À rappeler : ' + r.Nom + ' - ' + (r.aujourdhui ? 'ce soir' : 'demain') + ' à ' + r.heure + ' (' + r.personnes + ' pers.)' + (r.Téléphone ? ' - ' + r.Téléphone : ''), couleur: 'var(--cyan)',
+            cible: function () {
+              switchTab('gestion-client', document.getElementById('nav-tab-gestion-client'));
+              const btn = document.querySelector('#gc-subnav button[onclick*="reservations"]');
+              if (btn) switchGestionClientSection('reservations', btn);
+            }
+          });
+        });
+        // Mon prochain shift planifié (dans les 36 prochaines heures).
+        const sh = DATA.monProchainShift;
+        if (sh && sh.dansHeures <= 36 && vues.indexOf('shift-' + sh.id) === -1) {
+          notifs.push({ id: 'shift-' + sh.id, categorie: 'Planning', texte: sh.enCours ? 'Ton shift est en cours (jusqu\'à ' + sh.fin + ')' : 'Shift planifié ' + fmtJour_(sh.jour + 'T12:00:00') + ' : ' + sh.debut + ' → ' + sh.fin + (sh.note ? ' (' + sh.note + ')' : ''), couleur: 'var(--gold)', cible: function () { switchTab('planning', document.getElementById('nav-tab-planning')); } });
+        }
+        if (DATA.reglementAAccepter) {
+          notifs.push({ id: 'reglement-a-accepter', categorie: 'Règlement', texte: 'Le règlement intérieur est à lire et à accepter', couleur: 'var(--red)', cible: function () { switchTab('reglement', document.getElementById('nav-tab-reglement')); } });
+        }
         // Abonnements VIP qui expirent dans 3 jours ou moins.
         (DATA.vipExpirant || []).forEach(m => {
           const id = 'vipexp-' + m.ID + '-' + String(m.expiration).slice(0, 10);
@@ -4526,6 +4667,7 @@
       const heures = r.parHeure.map((v, h) => ({ v: v, h: h })).filter(x => x.v > 0);
       document.getElementById('rap-heures').innerHTML = heures.length ? barresRapport_(heures.map(x => x.v), heures.map(x => String(x.h).padStart(2, '0') + ' h')) : '<div class="small">Aucune vente.</div>';
       document.getElementById('rap-jours').innerHTML = r.parJour.length ? barresRapport_(r.parJour.map(x => x.ca), r.parJour.map(x => fmtJour_(x.jour + 'T12:00:00'))) : '<div class="small">Aucune vente.</div>';
+      document.getElementById('rap-clients').innerHTML = (r.meilleursClients || []).map(c => `<tr><td>${escapeHtml(c.nom)}</td><td>${c.lignes}</td><td class="kpi-gold">${money(c.ca)}</td></tr>`).join('') || '<tr><td colspan="3" class="small">Aucune vente rattachée à un compte pour cette période.</td></tr>';
       document.getElementById('rap-equipe').innerHTML = r.parEmploye.map(e => `<tr><td>${escapeHtml(e.employe)}</td><td>${e.lignes}</td><td class="kpi-gold">${money(e.ca)}</td></tr>`).join('') || '<tr><td colspan="3" class="small">Aucune vente.</td></tr>';
       document.getElementById('rap-vip').innerHTML =
         `<div class="flex-between"><span>Adhésions VIP</span><b class="kpi-gold">${money(r.vip.ca)}</b></div><div class="small mb10">${r.vip.nb} adhésion(s) ou renouvellement(s)</div>` +
@@ -4741,12 +4883,12 @@
       const r = CLOTURE; if (!r) return;
       const k = r.kpis;
       const carte = (lib, val, cls) => `<div class="card"><div class="kpi-label">${lib}</div><div class="kpi-value ${cls}">${val}</div></div>`;
-      document.getElementById('cloture-kpis').innerHTML = carte('Ventes de la soirée', money(k.revenus), 'kpi-green') + carte('Pourboires à partager', money(k.pourboires), 'kpi-gold') +
-        carte('Lignes de vente', k.lignes, 'kpi-cyan') + carte('Panier moyen', money(k.panierMoyen), 'kpi-cyan') +
-        carte('Dépenses de la soirée', money(k.depenses), 'kpi-red') + carte('Exports', money(k.exportsTotal), 'kpi-gold');
+      document.getElementById('cloture-kpis').innerHTML = carte('Argent fait (ventes' + (k.exportsTotal ? ' + exports' : '') + ')', money(k.argentFait), 'kpi-green') + carte('Pourboires', money(k.pourboires), 'kpi-gold') +
+        carte('Argent total avec pourboires', money(k.argentTotal), 'kpi-green') + carte('Lignes de vente', k.lignes, 'kpi-cyan') + carte('Panier moyen', money(k.panierMoyen), 'kpi-cyan') +
+        carte('Dépenses de la soirée', money(k.depenses), 'kpi-red');
       const dc = r.dejaCloturee;
       document.getElementById('cloture-statut').innerHTML = dc
-        ? `<span class="pill ${dc.verse ? 'pill-dispo' : 'pill-bas'}">Clôturée par ${escapeHtml(dc.par)} le ${fmtDate(dc.date)}${dc.verse ? ' - pourboires versés' : ' - pourboires à verser'}</span>`
+        ? `<span class="pill ${dc.verse ? 'pill-dispo' : 'pill-bas'}">Clôturée par ${escapeHtml(dc.par)} le ${fmtDate(dc.date)}${dc.verse ? ' - pourboires versés' : ' - pourboires à verser'}</span>` + (dc.argentCompte !== null ? ` <span class="pill ${dc.ecart === 0 ? 'pill-dispo' : 'pill-rupture'}">Caisse comptée : ${money(dc.argentCompte)} (écart ${ecartMoney_(dc.ecart)})</span>` : '')
         : '<span class="pill pill-bas">Soirée non clôturée</span>';
       const c = r.comparatif;
       const ligne = (lib, d, ref) => `<tr><td>${lib}</td><td class="kpi-gold">${money(d.revenus)}</td><td>${money(d.pourboires)}</td><td>${d.lignes}</td><td>${ref ? ecartPourcent_(k.revenus, d.revenus) : ''}</td></tr>`;
@@ -4759,7 +4901,16 @@
       document.getElementById('cloture-parts').innerHTML = r.partage.parts.map(p => `<tr><td>${escapeHtml(p.nom)}</td><td class="small">${escapeHtml(p.role)}</td><td class="small">${escapeHtml(p.raison)}</td><td>${money(p.ca)}</td><td class="kpi-gold" style="font-weight:700;">${money(p.montant)}</td></tr>`).join('') || '<tr><td colspan="5" class="small">Personne n\'est éligible : aucun shift ni vente sur cette soirée.</td></tr>';
       document.getElementById('cloture-actions').innerHTML = dc
         ? (dc.verse ? '<span class="small">Les pourboires de cette soirée ont déjà été versés.</span>' : `<button class="btn-primary" onclick="verserPourboiresUI('${dc.id}')">Verser les pourboires</button>`)
-        : '<button class="btn-primary" onclick="cloturerSoireeUI()">Clôturer la soirée</button>';
+        : `<div style="width:100%;"><div class="grid grid-3 mb10" style="align-items:end;"><div><label>Argent réellement compté en caisse ($) - facultatif</label><input type="number" min="0" step="0.01" id="cloture-compte" oninput="majEcartCloture_()" placeholder="Total attendu : ${k.argentTotal}"></div><div><label>Écart avec l'argent total attendu</label><div id="cloture-ecart" style="font-weight:700;font-size:20px;">-</div></div></div><button class="btn-primary" onclick="cloturerSoireeUI()">Clôturer la soirée</button></div>`;
+    }
+    function ecartMoney_(e) { return (e > 0 ? '+' : (e < 0 ? '-' : '')) + money(Math.abs(e)); }
+    function majEcartCloture_() {
+      const v = document.getElementById('cloture-compte').value;
+      const el = document.getElementById('cloture-ecart');
+      if (v === '' || !CLOTURE) { el.textContent = '-'; el.className = ''; return; }
+      const e = Math.round((Number(v) - CLOTURE.kpis.argentTotal) * 100) / 100;
+      el.textContent = ecartMoney_(e) + (e === 0 ? ' - la caisse est juste' : (e > 0 ? ' - en trop' : ' - il manque de l\'argent'));
+      el.className = e === 0 ? 'kpi-green' : 'kpi-red';
     }
     function chargerReglesCloture_() {
       google.script.run.withSuccessHandler(function (r) {
@@ -4778,7 +4929,7 @@
         google.script.run.withSuccessHandler(function (res) {
           showToast('Soirée clôturée : ' + money(res.pourboires) + ' de pourboires partagés entre ' + res.nbParts + ' personne(s).');
           chargerCloture();
-        }).withFailureHandler(function (err) { document.getElementById('cloture-err').textContent = err.message || String(err); }).cloturerSoiree(jour, CURRENT_USER.sessionToken);
+        }).withFailureHandler(function (err) { document.getElementById('cloture-err').textContent = err.message || String(err); }).cloturerSoiree(jour, CURRENT_USER.sessionToken, (document.getElementById('cloture-compte') || {}).value || '');
       });
     }
     function verserPourboiresUI(id) {
@@ -4792,10 +4943,11 @@
     function chargerHistoriqueCloture_() {
       google.script.run.withSuccessHandler(function (l) {
         document.getElementById('cloture-historique').innerHTML = l.map(c => `<tr>
-          <td>${fmtJour_(c.soiree + 'T12:00:00')}<div class="small">par ${escapeHtml(c.cloturePar)}</div></td><td class="kpi-gold">${money(c.revenus)}</td><td>${money(c.pourboires)}</td>
+          <td>${fmtJour_(c.soiree + 'T12:00:00')}<div class="small">par ${escapeHtml(c.cloturePar)}</div></td><td class="kpi-gold">${money((c.resume.kpis || {}).argentFait != null ? c.resume.kpis.argentFait : c.revenus)}</td><td>${money((c.resume.kpis || {}).argentTotal != null ? c.resume.kpis.argentTotal : Number(c.revenus) + Number(c.pourboires))}</td>
+          <td>${c.argentCompte === null ? '<span class="small">-</span>' : money(c.argentCompte) + ' <span class="' + (c.ecart === 0 ? 'kpi-green' : 'kpi-red') + '">(' + ecartMoney_(c.ecart) + ')</span>'}</td>
           <td class="small">${c.parts.map(p => escapeHtml(p.nom) + ' ' + money(p.montant) + (p.verse ? '' : ' (à verser)')).join(' · ') || '-'}</td>
           <td><span class="pill ${c.verse ? 'pill-dispo' : 'pill-bas'}">${c.verse ? 'Versés' : 'À verser'}</span></td>
-          <td>${c.verse ? '' : `<a class="linklike" onclick="verserPourboiresUI('${c.id}')">Verser</a>`}</td></tr>`).join('') || '<tr><td colspan="6" class="small">Aucune soirée clôturée.</td></tr>';
+          <td>${c.verse ? '' : `<a class="linklike" onclick="verserPourboiresUI('${c.id}')">Verser</a>`}</td></tr>`).join('') || '<tr><td colspan="7" class="small">Aucune soirée clôturée.</td></tr>';
       }).withFailureHandler(function () {}).getClotures(CURRENT_USER.sessionToken);
     }
 
@@ -4919,6 +5071,12 @@
             ${r.commande ? '<div class="small">Précommande : ' + escapeHtml(r.commande) + (r.totalCommande > 0 ? ' - ' + money(r.totalCommande) : '') + (r.encaissee ? ' (réglée)' : '') + '</div>' : ''}
             ${r.statut === 'Refusée' && r.raisonRefus ? '<div class="small" style="color:var(--red);">Motif : ' + escapeHtml(r.raisonRefus) + '</div>' : ''}</div>
           <div class="flex" style="align-items:center;gap:10px;">${pillStatut(r.statut)}${r.peutAnnuler ? `<button class="btn-ghost" onclick="annulerReservationClient('${r.id}')">Annuler</button>` : ''}</div></div>`).join('') || '<div class="small">Aucune réservation pour l\'instant.</div>';
+        const ach = e.achats || { total: 0, nbVisites: 0, dernieres: [] };
+        document.getElementById('moncompte-achats').innerHTML = ach.total > 0
+          ? `<div class="card"><div class="flex" style="gap:28px;flex-wrap:wrap;"><div><div class="kpi-label">Total dépensé</div><div class="kpi-value kpi-gold">${money(ach.total)}</div></div><div><div class="kpi-label">Visites</div><div class="kpi-value">${ach.nbVisites}</div></div>${ach.derniere ? '<div><div class="kpi-label">Dernier passage</div><div class="kpi-value" style="font-size:18px;">' + fmtJour_(ach.derniere) + '</div></div>' : ''}</div></div>`
+            + ach.dernieres.map(d => `<div class="resa-espace"><div><b>${fmtJour_(d.date)}</b><div class="small">${escapeHtml(d.articles)}</div></div><b>${money(d.total)}</b></div>`).join('')
+          : '<div class="small">Tes achats apparaîtront ici dès que le personnel les enregistrera sur ton compte.</div>';
+        afficherRappelClient_(e.rappel);
         document.getElementById('moncompte-soirees').innerHTML = e.soirees.map(x => `<div class="resa-espace"><div><b>${escapeHtml(x.Titre)}</b><div class="small">${fmtJour_(x.DateSoiree + 'T12:00:00')}${x.Heure ? ' à ' + escapeHtml(x.Heure) : ''}${x.DJ ? ' - DJ ' + escapeHtml(x.DJ) : ''}</div></div><button class="btn-ghost" onclick="reserverPourSoiree_('${x.DateSoiree}')">Réserver</button></div>`).join('')
           || '<div class="small">Aucune soirée annoncée pour le moment.</div>';
       }).withFailureHandler(function () {
@@ -4933,6 +5091,170 @@
           if (typeof chargerStatutReservationClient_ === 'function') chargerStatutReservationClient_();
         }).withFailureHandler(onError).annulerMaReservation(id, CURRENT_USER.sessionToken);
       });
+    }
+
+
+    // ===== Planning des shifts =====
+    let PLANNING = null, PLANNING_LUNDI = '';
+    function ajouterJoursISO_(iso, n) { const d = new Date(iso + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); }
+    function chargerPlanning() { chargerMesShiftsPlanifies_(); chargerSemainePlanning_(); }
+    function chargerMesShiftsPlanifies_() {
+      google.script.run.withSuccessHandler(function (l) {
+        const aujourdhui = new Date().toISOString().slice(0, 10);
+        document.getElementById('planning-mes-liste').innerHTML = l.map(x => `<div class="resa-espace"><div><b>${x.enCours ? 'En cours' : fmtJour_(x.jour + 'T12:00:00')}</b> - ${escapeHtml(x.debut)} → ${escapeHtml(x.fin)}${x.note ? ' <span class="small">(' + escapeHtml(x.note) + ')</span>' : ''}</div><span class="pill ${x.enCours ? 'pill-dispo' : 'pill-bas'}">${x.enCours ? 'Maintenant' : (x.dansHeures <= 24 ? 'Bientôt' : 'Planifié')}</span></div>`).join('') || 'Aucun shift planifié pour toi pour le moment.';
+      }).withFailureHandler(function () {}).getMesShiftsPlanifies(CURRENT_USER.sessionToken);
+    }
+    function chargerSemainePlanning_() {
+      google.script.run.withSuccessHandler(function (r) { PLANNING = r; PLANNING_LUNDI = r.lundi; renderPlanning(); }).withFailureHandler(onError).getPlanning(PLANNING_LUNDI || '', CURRENT_USER.sessionToken);
+    }
+    function planningSemaine_(delta) {
+      if (delta === 0) PLANNING_LUNDI = ''; else PLANNING_LUNDI = ajouterJoursISO_(PLANNING_LUNDI, 7 * delta);
+      chargerSemainePlanning_();
+    }
+    function dureeShiftHeures_(debut, fin) {
+      const [h1, m1] = debut.split(':').map(Number), [h2, m2] = fin.split(':').map(Number);
+      let d = (h2 * 60 + m2) - (h1 * 60 + m1); if (d <= 0) d += 1440; return d / 60;
+    }
+    function renderPlanning() {
+      const r = PLANNING; if (!r) return;
+      document.getElementById('planning-copier').classList.toggle('hidden', !r.peutGerer);
+      document.getElementById('planning-titre').textContent = 'Semaine du ' + fmtJour_(r.jours[0] + 'T12:00:00') + ' au ' + fmtJour_(r.jours[6] + 'T12:00:00');
+      const aujourdhui = new Date().toISOString().slice(0, 10);
+      const jourCourt = j => { const d = new Date(j + 'T12:00:00'); return d.toLocaleDateString('fr-FR', { weekday: 'short' }).replace('.', '') + ' ' + d.getDate() + '/' + String(d.getMonth() + 1).padStart(2, '0'); };
+      document.getElementById('planning-tete').innerHTML = '<tr><th>Employé</th>' + r.jours.map(j => `<th class="${j === aujourdhui ? 'plan-auj' : ''}">${jourCourt(j)}</th>`).join('') + '<th>Total</th></tr>';
+      document.getElementById('planning-corps').innerHTML = r.employes.map(e => {
+        const mesShifts = r.shifts.filter(x => x.employeId === e.id);
+        const total = mesShifts.reduce((t, x) => t + dureeShiftHeures_(x.debut, x.fin), 0);
+        const cellules = r.jours.map(j => {
+          const absent = r.absences.some(a => a.employeId === e.id && a.debut <= j && a.fin >= j);
+          const chips = mesShifts.filter(x => x.jour === j).map(x => `<span class="plan-chip" ${r.peutGerer ? `onclick="ouvrirShiftPlanning_('${x.id}')"` : ''}>${escapeHtml(x.debut)} → ${escapeHtml(x.fin)}${x.note ? '<small>' + escapeHtml(x.note) + '</small>' : ''}</span>`).join('');
+          return `<td class="${j === aujourdhui ? 'plan-auj' : ''}">${absent ? '<span class="plan-absent">Absent</span>' : ''}${chips}${r.peutGerer ? `<button class="plan-plus" onclick="ouvrirShiftPlanning_('', '${e.id}', '${j}')" title="Ajouter un shift">+</button>` : ''}</td>`;
+        }).join('');
+        return `<tr class="${e.id === r.moi ? 'plan-moi' : ''}"><td><b>${escapeHtml(e.nom)}</b><div class="small">${escapeHtml(e.role)}</div></td>${cellules}<td class="small">${total ? (Math.round(total * 10) / 10) + ' h' : '-'}</td></tr>`;
+      }).join('') || '<tr><td colspan="9" class="small">Aucun employé.</td></tr>';
+    }
+    function ouvrirShiftPlanning_(id, employeId, jour) {
+      const r = PLANNING; if (!r || !r.peutGerer) return;
+      const x = id ? r.shifts.find(y => y.id === id) : null;
+      document.getElementById('pl-employe').innerHTML = r.employes.map(e => `<option value="${e.id}">${escapeHtml(e.nom)}</option>`).join('');
+      document.getElementById('pl-id').value = x ? x.id : '';
+      document.getElementById('pl-employe').value = x ? x.employeId : employeId;
+      document.getElementById('pl-jour').value = x ? x.jour : jour;
+      document.getElementById('pl-debut').value = x ? x.debut : '18:00';
+      document.getElementById('pl-fin').value = x ? x.fin : '02:00';
+      document.getElementById('pl-note').value = x ? x.note : '';
+      document.getElementById('pl-titre').textContent = x ? 'Modifier le shift' : 'Nouveau shift';
+      document.getElementById('pl-supprimer').classList.toggle('hidden', !x);
+      document.getElementById('pl-err').textContent = '';
+      document.getElementById('planning-modal').classList.remove('hidden');
+    }
+    function enregistrerShiftPlanning_(forcer) {
+      const err = document.getElementById('pl-err'); err.textContent = '';
+      const shift = { id: document.getElementById('pl-id').value || '', employeId: document.getElementById('pl-employe').value, jour: document.getElementById('pl-jour').value, debut: document.getElementById('pl-debut').value, fin: document.getElementById('pl-fin').value, note: document.getElementById('pl-note').value, forcer: !!forcer };
+      google.script.run.withSuccessHandler(function () {
+        document.getElementById('planning-modal').classList.add('hidden'); showToast('Shift enregistré.'); chargerSemainePlanning_(); chargerMesShiftsPlanifies_();
+      }).withFailureHandler(function (e) {
+        const msg = e.message || String(e);
+        if (/absence/i.test(msg) && !forcer) {
+          confirmerActionAvantExecution('Absence approuvée', msg + ' Planifier quand même ?', function () { enregistrerShiftPlanning_(true); });
+        } else err.textContent = msg;
+      }).savePlanningShift(shift, CURRENT_USER.sessionToken);
+    }
+    function supprimerShiftPlanning_() {
+      const id = document.getElementById('pl-id').value; if (!id) return;
+      google.script.run.withSuccessHandler(function () { document.getElementById('planning-modal').classList.add('hidden'); showToast('Shift supprimé.'); chargerSemainePlanning_(); chargerMesShiftsPlanifies_(); })
+        .withFailureHandler(function (e) { document.getElementById('pl-err').textContent = e.message || String(e); }).deletePlanningShift(id, CURRENT_USER.sessionToken);
+    }
+    function copierPlanningUI() {
+      const src = ajouterJoursISO_(PLANNING_LUNDI, -7);
+      confirmerActionAvantExecution('Recopier le planning', 'Recopier tous les shifts de la semaine précédente sur cette semaine ? Les doublons et les jours d\'absence approuvée sont ignorés.', function () {
+        google.script.run.withSuccessHandler(function (r) { showToast(r.copies + ' shift(s) recopié(s).'); chargerSemainePlanning_(); }).withFailureHandler(onError).copierPlanningSemaine(src, PLANNING_LUNDI, CURRENT_USER.sessionToken);
+      });
+    }
+
+    // ===== Rappels de réservation =====
+    function marquerRappelUI(id) {
+      google.script.run.withSuccessHandler(function () {
+        const r = (DATA.reservations || []).find(x => x.ID === id); if (r) r.RappelEnvoye = 'oui';
+        DATA.reservationsARappeler = (DATA.reservationsARappeler || []).filter(x => x.ID !== id);
+        showToast('Réservation marquée comme rappelée.'); renderReservationsTable(); renderNotifPanel();
+      }).withFailureHandler(onError).marquerReservationRappelee(id, CURRENT_USER.sessionToken);
+    }
+    function afficherRappelClient_(rappel) {
+      const el = document.getElementById('vitrine-rappel'); if (!el) return;
+      if (!rappel || sessionStorage.getItem('rappel_ferme_' + rappel.id)) { el.classList.add('hidden'); return; }
+      el.innerHTML = `<span>🔔 <b>Rappel :</b> ta réservation pour ${rappel.personnes} personne${rappel.personnes > 1 ? 's' : ''} est ${rappel.aujourdhui ? 'ce soir' : 'demain'} à <b>${escapeHtml(rappel.heure)}</b>${rappel.numero ? ' (n° ' + escapeHtml(rappel.numero) + ')' : ''}${rappel.precommande ? ' - précommande : ' + escapeHtml(rappel.precommande) : ''}. On t'attend à The Palace !</span>
+        <button class="btn-ghost" onclick="fermerRappelClient_('${rappel.id}')">OK</button>`;
+      el.classList.remove('hidden');
+    }
+    function fermerRappelClient_(id) { try { sessionStorage.setItem('rappel_ferme_' + id, '1'); } catch (e) {  } document.getElementById('vitrine-rappel').classList.add('hidden'); }
+
+    // ===== Règlement intérieur =====
+    function paragraphesRegl_(texte) {
+      return String(texte || '').split(/\n\s*\n/).map(t => t.trim()).filter(Boolean).map(t => '<p>' + escapeHtml(t).replace(/\n/g, '<br>') + '</p>').join('');
+    }
+    function renderReglementVitrine_() {
+      const el = document.getElementById('vitrine-reglement'); if (el) el.innerHTML = paragraphesRegl_(DATA.reglementClient);
+      const l = document.getElementById('inscr-reglement'); if (l) l.classList.toggle('hidden', !DATA.reglementClient);
+    }
+    function ouvrirReglementDepuisInscription() {
+      document.getElementById('login-screen').classList.add('hidden');
+      allerPageVitrine('reglement');
+    }
+    let REGLEMENT = null;
+    function chargerReglement() {
+      google.script.run.withSuccessHandler(function (r) { REGLEMENT = r; renderReglement(); }).withFailureHandler(onError).getReglement(CURRENT_USER.sessionToken);
+    }
+    function renderReglement() {
+      const r = REGLEMENT; if (!r) return;
+      const e = r.employe;
+      document.getElementById('regl-employe-texte').innerHTML = e.visible ? paragraphesRegl_(e.texte) : '<div class="small">Le règlement du personnel n\'est pas encore publié.' + (r.peutModifier ? ' Tu peux le rédiger plus bas.' : '') + '</div>';
+      document.getElementById('regl-statut').innerHTML = e.visible ? (r.accepte ? '<span class="pill pill-dispo">Accepté le ' + fmtDate(r.dateAcceptation) + '</span>' : '<span class="pill pill-bas">À accepter</span>') : '';
+      document.getElementById('regl-accepter').classList.toggle('hidden', !(e.visible && !r.accepte));
+      document.getElementById('regl-client-apercu').classList.toggle('hidden', !(r.client.visible && r.client.texte));
+      document.getElementById('regl-client-texte').innerHTML = paragraphesRegl_(r.client.texte);
+      document.getElementById('regl-edition').classList.toggle('hidden', !r.peutModifier);
+      if (r.peutModifier) {
+        document.getElementById('regl-client-edit').value = r.client.texte; document.getElementById('regl-client-pub').checked = !!r.client.visible;
+        document.getElementById('regl-employe-edit').value = e.texte; document.getElementById('regl-employe-pub').checked = !!e.visible;
+        document.getElementById('regl-suivi').innerHTML = (r.suivi || []).map(x => `<tr><td>${escapeHtml(x.nom)}</td><td class="small">${escapeHtml(x.role)}</td><td><span class="pill ${x.accepte ? 'pill-dispo' : 'pill-bas'}">${x.accepte ? 'A accepté' : 'Pas encore'}</span></td></tr>`).join('');
+      }
+      DATA.reglementAAccepter = e.visible && !r.accepte;
+    }
+    function accepterReglementUI() {
+      google.script.run.withSuccessHandler(function () { showToast('Règlement accepté, merci !'); DATA.reglementAAccepter = false; chargerReglement(); }).withFailureHandler(onError).accepterReglementEmploye(CURRENT_USER.sessionToken);
+    }
+    function enregistrerReglementUI(type) {
+      const err = document.getElementById('regl-err'); err.textContent = '';
+      const texte = document.getElementById(type === 'client' ? 'regl-client-edit' : 'regl-employe-edit').value;
+      const visible = document.getElementById(type === 'client' ? 'regl-client-pub' : 'regl-employe-pub').checked;
+      google.script.run.withSuccessHandler(function () {
+        showToast(visible ? 'Règlement enregistré et publié.' : 'Règlement enregistré (non publié).');
+        if (type === 'client') DATA.reglementClient = visible ? texte : '';
+        chargerReglement();
+      }).withFailureHandler(function (e) { err.textContent = e.message || String(e); }).setReglement(type, texte, visible, CURRENT_USER.sessionToken);
+    }
+
+
+    // ===== Accès admin du serveur : validation par la propriétaire =====
+    function chargerDemandesAdmin() {
+      google.script.run.withSuccessHandler(function (r) {
+        DATA.demandesAdminEnAttente = r.enAttente;
+        document.getElementById('patron-onglet-accesadmin-badge').textContent = r.enAttente.length ? ' (' + r.enAttente.length + ')' : '';
+        document.getElementById('tbl-demandes-admin').innerHTML = r.enAttente.map(d => `<tr><td><b>${escapeHtml(d.Nom)}</b></td><td class="small">${escapeHtml(d.Identifiant)}</td><td class="small">${escapeHtml(d.Message || '-')}</td><td class="small">${fmtDate(d.DateCreation)}</td>
+          <td><a class="linklike" onclick="traiterDemandeAdminUI('${d.ID}', 'Acceptée')">Accepter</a> · <a class="linklike" onclick="traiterDemandeAdminUI('${d.ID}', 'Refusée')">Refuser</a></td></tr>`).join('') || '<tr><td colspan="5" class="small">Aucune demande en attente.</td></tr>';
+        document.getElementById('tbl-demandes-admin-traitees').innerHTML = r.traitees.map(d => `<tr><td>${escapeHtml(d.Nom)}</td><td class="small">${escapeHtml(d.Identifiant)}</td><td><span class="pill ${d.Statut === 'Acceptée' ? 'pill-dispo' : 'pill-rupture'}">${escapeHtml(d.Statut)}</span>${d.RaisonRefus ? ' <span class="small">' + escapeHtml(d.RaisonRefus) + '</span>' : ''}</td><td class="small">${escapeHtml(d.TraitePar || '')}</td></tr>`).join('') || '<tr><td colspan="4" class="small">Aucune.</td></tr>';
+      }).withFailureHandler(onError).getDemandesAdmin(CURRENT_USER.sessionToken);
+    }
+    function traiterDemandeAdminUI(id, decision) {
+      const lancer = function (raison) {
+        google.script.run.withSuccessHandler(function () {
+          showToast(decision === 'Acceptée' ? 'Accès admin accordé (lecture seule).' : 'Demande refusée.');
+          rafraichirDonneesApp_(function () { chargerDemandesAdmin(); renderNotifPanel(); });
+        }).withFailureHandler(onError).traiterDemandeAdmin(id, decision, raison || '', CURRENT_USER.sessionToken);
+      };
+      if (decision === 'Acceptée') confirmerActionAvantExecution('Accorder l\'accès', 'Donner à cette personne un accès en lecture seule à toute la compta ?', function () { lancer(''); });
+      else { const raison = prompt('Raison du refus (facultatif) :', ''); if (raison === null) return; lancer(raison); }
     }
 
     // ===== Rester connecté =====
@@ -5096,6 +5418,7 @@
     function renderStatutClubHeader_() {
       const el = document.getElementById('statut-club');
       if (!el) return;
+      el.classList.toggle('hidden', estRoleAdminLectureSeule());
       const st = calculerStatutOuvertureVitrine_(DATA.horairesOuverture || []);
       el.classList.toggle('ouvert', !!st.ouvert);
       document.getElementById('statut-club-texte').textContent = (st.ouvert ? 'Club ouvert' : 'Club fermé') + (st.manuel ? ' (manuel)' : '');
@@ -5257,9 +5580,11 @@
       const pageClientActive = DATA.pageClientActive !== false;
       const reservationsActives = DATA.reservationsActives !== false;
       const pagesNav = [['accueil', 'Accueil'], ['horaires', 'Horaires'], ['carte', 'La carte'], ['soirees', 'Soirées'], ['vip', 'VIP']];
+      renderReglementVitrine_();
       renderSoireesVitrine_();
       if (pageClientActive && reservationsActives) pagesNav.push(['reserver', 'Réserver']);
       if (aproposDisponible) pagesNav.push(['apropos', 'À propos']);
+      if (DATA.reglementClient) pagesNav.push(['reglement', 'Règlement']);
       if (contactDisponible) pagesNav.push(['contact', 'Contact']);
       if (estClientConnecte) pagesNav.push(['moncompte', 'Mon compte']);
       document.getElementById('vitrine-nav-liens').innerHTML = pagesNav.map(p =>
@@ -5432,8 +5757,10 @@
     }
     let TIMER_COMPTE_REBOURS_NUMERO = null;
 
+    let NUMERO_RELECTURE_PLANIFIEE = false, NUMERO_RELECTURES = 0;
     function demarrerCompteARebounsNumero_(r) {
       clearInterval(TIMER_COMPTE_REBOURS_NUMERO);
+      if (r.NumeroReservation) NUMERO_RELECTURES = 0;
       if (r.Statut !== 'Confirmée' || r.NumeroReservation || !r.DateNumeroDispo) return;
       const cible = new Date(r.DateNumeroDispo).getTime();
       function tick() {
@@ -5443,7 +5770,13 @@
         if (restant <= 0) {
           clearInterval(TIMER_COMPTE_REBOURS_NUMERO);
           el.textContent = 'Ton numéro arrive...';
-          chargerStatutReservationClient_();
+          // Relecture du serveur en différé (jamais en direct : l'affichage relance ce même compte à rebours, ce qui bouclait sans fin).
+          if (!NUMERO_RELECTURE_PLANIFIEE && NUMERO_RELECTURES < 20) {
+            NUMERO_RELECTURE_PLANIFIEE = true; NUMERO_RELECTURES++;
+            setTimeout(function () { NUMERO_RELECTURE_PLANIFIEE = false; chargerStatutReservationClient_(); }, 2000);
+          } else if (NUMERO_RELECTURES >= 20) {
+            el.textContent = 'Ton numéro sera disponible sous peu : actualise la page.';
+          }
           return;
         }
         const min = Math.floor(restant / 60000), sec = Math.floor((restant % 60000) / 1000);
@@ -5511,6 +5844,21 @@
       document.getElementById('login-normal').classList.toggle('hidden');
       document.getElementById('login-inscription-client').classList.toggle('hidden');
     }
+    function basculerDemandeAdmin() {
+      const afficher = document.getElementById('login-demande-admin').classList.contains('hidden');
+      document.getElementById('login-normal').classList.toggle('hidden', afficher);
+      document.getElementById('login-demande-admin').classList.toggle('hidden', !afficher);
+      document.getElementById('da-err').textContent = ''; document.getElementById('da-ok').textContent = '';
+    }
+    function demanderAccesAdminUI() {
+      const err = document.getElementById('da-err'), ok = document.getElementById('da-ok'); err.textContent = ''; ok.textContent = '';
+      const identifiant = document.getElementById('da-identifiant').value.trim(), pwd = document.getElementById('da-pwd').value, nom = document.getElementById('da-nom').value.trim(), message = document.getElementById('da-message').value.trim();
+      if (!identifiant || !pwd || !nom) { err.textContent = 'Identifiant, mot de passe et nom sont obligatoires.'; return; }
+      google.script.run.withSuccessHandler(function () {
+        ok.textContent = 'Demande envoyée. La propriétaire doit la valider : reviens te connecter avec ces identifiants après sa réponse.';
+        ['da-identifiant', 'da-pwd', 'da-nom', 'da-message'].forEach(id => { document.getElementById(id).value = ''; });
+      }).withFailureHandler(function (e) { err.textContent = e.message || String(e); }).demanderAccesAdmin(identifiant, pwd, nom, message);
+    }
     let INSCRIPTION_CLIENT_EN_COURS = false;
     function creerCompteClientUI() {
       if (INSCRIPTION_CLIENT_EN_COURS) return;
@@ -5524,6 +5872,8 @@
       if (!identifiant || !pwd || !nom || !prenom || !telephone) { errEl.textContent = 'Tous les champs sont obligatoires : identifiant, mot de passe, nom, prénom et téléphone.'; return; }
       if (pwd.length < 6) { errEl.textContent = 'Le mot de passe doit faire au moins 6 caractères.'; return; }
       if (!telephoneResaValide_(telephone)) { errEl.textContent = MSG_TELEPHONE_; return; }
+      const accepteReglement = !!(document.getElementById('inscription-reglement') || {}).checked;
+      if (DATA.reglementClient && !accepteReglement) { errEl.textContent = 'Tu dois cocher « J\'ai lu et j\'accepte le règlement intérieur » pour créer ton compte.'; return; }
       INSCRIPTION_CLIENT_EN_COURS = true;
       afficherChargement('Création du compte...');
       google.script.run.withSuccessHandler(function () {
@@ -5539,7 +5889,7 @@
         INSCRIPTION_CLIENT_EN_COURS = false;
         masquerChargement();
         errEl.textContent = err.message || String(err);
-      }).creerCompteClient(identifiant, pwd, nom, prenom, telephone);
+      }).creerCompteClient(identifiant, pwd, nom, prenom, telephone, accepteReglement);
     }
     function basculerInscriptionClientReset_() {
       document.getElementById('login-normal').classList.remove('hidden');
@@ -5549,6 +5899,7 @@
       document.getElementById('inscription-nom').value = '';
       document.getElementById('inscription-prenom').value = '';
       document.getElementById('inscription-telephone').value = '555-';
+      if (document.getElementById('inscription-reglement')) document.getElementById('inscription-reglement').checked = false;
     }
     let RESA_EN_COURS = false;
 
@@ -6385,6 +6736,8 @@
         { id: 'dj', label: 'DJ', mgmtOnly: false },
         { id: 'rapports-analyses', label: 'Rapports', mgmtOnly: true },
         { id: 'cloture', label: 'Clôture', mgmtOnly: true },
+        { id: 'planning', label: 'Planning', mgmtOnly: false },
+        { id: 'reglement', label: 'Règlement', mgmtOnly: false },
         { id: 'liste-noire', label: 'Liste noire', mgmtOnly: false },
         { id: 'soirees', label: 'Soirées', mgmtOnly: false, condition: function () { return peutGererSoireesFront_(); } },
         { id: 'rapports-entreprise', label: 'Rapports Entreprise', mgmtOnly: false, rapportsOnly: true },
@@ -6418,9 +6771,9 @@
       const ongletsRoleSecondaire = (permRoleSecondaire && permRoleSecondaire.ongletsDefinis) ? permRoleSecondaire.onglets : [];
 
       const menusDesactifs = DATA.menusDesactifs || [];
-      const TOUJOURS_VISIBLES = ['agenda', 'chat', 'dj', 'liste-noire', 'soirees'];
+      const TOUJOURS_VISIBLES = ['agenda', 'chat', 'dj', 'liste-noire', 'soirees', 'planning', 'reglement'];
       tabs.forEach(tab => {
-        if (tab.condition && !tab.condition()) return;
+        if (tab.condition && !tab.condition() && !estAdminLectureSeule) return;
 
         if (menusDesactifs.indexOf(tab.id) !== -1) return;
 
@@ -6676,7 +7029,7 @@
       if (id === ONGLET_ACTUEL) return; 
       if (!antispamNavigation_()) return;
       ONGLET_ACTUEL = id;
-      ['dashboard', 'ventes', 'shifts', 'achats', 'section-patron', 'admin', 'claque', 'articles', 'stock', 'ingredients', 'gestion-client', 'objectifs', 'agenda', 'chat', 'dj', 'master-settings', 'rapports-entreprise', 'rapports-analyses', 'cloture', 'liste-noire', 'soirees'].forEach(t => {
+      ['dashboard', 'ventes', 'shifts', 'achats', 'section-patron', 'admin', 'claque', 'articles', 'stock', 'ingredients', 'gestion-client', 'objectifs', 'agenda', 'chat', 'dj', 'master-settings', 'rapports-entreprise', 'rapports-analyses', 'cloture', 'planning', 'reglement', 'liste-noire', 'soirees'].forEach(t => {
         document.getElementById('tab-' + t).classList.add('hidden');
       });
       document.getElementById('tab-' + id).classList.remove('hidden');
@@ -6699,6 +7052,8 @@
       if (id === 'rapports-entreprise') chargerRapportEntreprise();
       if (id === 'rapports-analyses') chargerRapportsAnalyses(RAPPORT_ANALYSE_PERIODE);
       if (id === 'cloture') chargerCloture();
+      if (id === 'planning') chargerPlanning();
+      if (id === 'reglement') chargerReglement();
       if (id === 'liste-noire') chargerListeNoire();
       if (id === 'soirees') chargerSoireesAdmin();
       if (id === 'agenda') chargerAgenda();
@@ -7435,6 +7790,7 @@
       const pct = REDUCTIONS_VIP_VENTES.CART;
       const commentaire = document.getElementById('cart-comment').value.trim() + (pct > 0 ? ' [Réduction VIP -' + pct + ' %]' : '');
       const succursaleParDefaut = document.getElementById('cart-succursale').value;
+      const clientIdVente = document.getElementById('cart-client').value || '';
       const tip = Number(document.getElementById('cart-tip').value) || 0;
       const lignes = lignesAvecReduction_(CART.map(c => ({ articleId: c.articleId, articleNom: c.articleNom, qte: c.qte, prixUnitaire: c.prixUnitaire, succursale: c.succursale || '' })), pct);
       if (tip > 0) lignes.push({ articleId: '', articleNom: 'Tip', qte: 1, prixUnitaire: tip, succursale: '' });
@@ -7452,7 +7808,7 @@
         renderCatalogueCaisse();
         showToast('Vente enregistrée : ' + money(totalVente));
         jouerSonVente();
-      }).withFailureHandler(function (err) { VENTE_EN_COURS = false; onError(err); }).addVentes(lignes, CURRENT_USER.ID, CURRENT_USER['Nom RP'], commentaire, succursaleParDefaut);
+      }).withFailureHandler(function (err) { VENTE_EN_COURS = false; onError(err); }).addVentes(lignes, CURRENT_USER.ID, CURRENT_USER['Nom RP'], commentaire, succursaleParDefaut, clientIdVente);
     }
 
     let VENTES_SCOPE_HISTORIQUE = 'global';
@@ -7992,7 +8348,7 @@
         .creerCompteClientParEmploye(nom, prenom, telephone, CURRENT_USER.ID, CURRENT_USER['Nom RP']);
     }
     function chargerComptesClients() {
-      document.getElementById('tbl-comptes-clients').innerHTML = '<tr><td colspan="5" class="small">Chargement...</td></tr>';
+      document.getElementById('tbl-comptes-clients').innerHTML = '<tr><td colspan="7" class="small">Chargement...</td></tr>';
       google.script.run.withSuccessHandler(function (clients) {
         DATA.comptesClients = clients;
         renderComptesClientsTable();
@@ -8029,7 +8385,7 @@
         const commandeAffichee = r.Commande ? '<div class="small" style="color:var(--gold);margin-top:4px;">Précommande : ' + escapeHtml(r.Commande) + (Number(r.TotalCommande) > 0 ? ' - ' + money(r.TotalCommande) : '') + '</div>' : '';
         return `<tr><td class="kpi-gold" style="font-weight:700;">${escapeHtml(r.NumeroReservation || '-')}</td><td>${fmtJour_(r.DateReservation)}</td><td>${escapeHtml(fmtHeureResa_(r.Heure))}</td><td>${escapeHtml(r.Nom)}${r.ListeNoire ? ' <span class="pill pill-rupture" title="Personne sur la liste noire">⚠ ' + escapeHtml(r.ListeNoire) + '</span>' : ''}</td><td class="small">${escapeHtml(r.Téléphone)}</td>
           <td>${r.NbPersonnes}</td><td class="small">${commentaireAffiche}${commandeAffichee}</td><td class="${couleurStatut}" style="font-weight:600;">${escapeHtml(r.Statut)}</td>
-          <td>${r.Statut === 'Confirmée' && r.CommandeDetail ? (r.CommandeVendue ? '<span class="pill pill-dispo" title="' + escapeHtml(r.CommandeVendue) + '">Encaissée</span> ' : `<a class="linklike" onclick="encaisserPrecommandeUI('${r.ID}')">Encaisser la précommande</a> `) : ''}${r.Statut !== 'Confirmée' ? `<a class="linklike" onclick="traiterReservationUI('${r.ID}','Confirmée')">Confirmer</a> ` : ''}${r.Statut !== 'Refusée' ? `<a class="linklike" onclick="traiterReservationUI('${r.ID}','Refusée')">Refuser</a> ` : `<a class="linklike" onclick="modifierRaisonRefusUI('${r.ID}')">Modifier la raison</a> `}<a class="linklike" onclick="supprimerReservationUI('${r.ID}')">Supprimer</a></td></tr>`;
+          <td>${r.Statut === 'Confirmée' ? (r.RappelEnvoye ? '<span class="pill pill-dispo" title="' + escapeHtml(r.RappelEnvoye) + '">Rappelée</span> ' : `<a class="linklike" onclick="marquerRappelUI('${r.ID}')">Marquer rappelée</a> `) : ''}${r.Statut === 'Confirmée' && r.CommandeDetail ? (r.CommandeVendue ? '<span class="pill pill-dispo" title="' + escapeHtml(r.CommandeVendue) + '">Encaissée</span> ' : `<a class="linklike" onclick="encaisserPrecommandeUI('${r.ID}')">Encaisser la précommande</a> `) : ''}${r.Statut !== 'Confirmée' ? `<a class="linklike" onclick="traiterReservationUI('${r.ID}','Confirmée')">Confirmer</a> ` : ''}${r.Statut !== 'Refusée' ? `<a class="linklike" onclick="traiterReservationUI('${r.ID}','Refusée')">Refuser</a> ` : `<a class="linklike" onclick="modifierRaisonRefusUI('${r.ID}')">Modifier la raison</a> `}<a class="linklike" onclick="supprimerReservationUI('${r.ID}')">Supprimer</a></td></tr>`;
       }).join('') || '<tr><td colspan="9" class="small">Aucune réservation ici.</td></tr>';
     }
     let RAISON_REFUS_CIBLE = null;
@@ -8088,9 +8444,9 @@
           const d = formaterDecompteVip(c.vip.DateExpiration);
           statutVip = `${escapeHtml(c.vip.OffreNom)} - <span class="${d.classe}">${d.texte}</span>`;
         }
-        return `<tr><td>${escapeHtml((c.Prénom ? c.Prénom + ' ' : '') + c.Nom)}</td><td class="small">${escapeHtml(c.Identifiant)}</td><td class="small">${escapeHtml(c.Téléphone || '-')}</td><td>${statutVip}</td>
+        return `<tr><td>${escapeHtml((c.Prénom ? c.Prénom + ' ' : '') + c.Nom)}</td><td class="small">${escapeHtml(c.Identifiant)}</td><td class="small">${escapeHtml(c.Téléphone || '-')}</td><td>${statutVip}</td><td>${c.depense > 0 ? '<b class="kpi-gold">' + money(c.depense) + '</b> <span class="small">(' + c.nbVisites + ' visite' + (c.nbVisites > 1 ? 's' : '') + ')</span>' : '<span class="small">-</span>'}</td><td class="small">${c.derniereVisite ? fmtJour_(c.derniereVisite) : '-'}</td>
           <td>${c.vip ? `<a class="linklike" onclick="retirerVipClientUI('${c.ID}')">Retirer le VIP</a> ` : ''}${CAN_SEE_MASTER_SETTINGS ? `<a class="linklike" onclick="voirCommeClientUI('${c.ID}')">Se connecter en tant que client</a> <a class="linklike" onclick="reinitialiserMdpClientUI('${c.ID}')">Réinitialiser le mot de passe</a> ` : ''}<a class="linklike" onclick="supprimerCompteClientUI('${c.ID}')">Supprimer le compte</a></td></tr>`;
-      }).join('') || '<tr><td colspan="5" class="small">Aucun compte client pour l\'instant.</td></tr>';
+      }).join('') || '<tr><td colspan="7" class="small">Aucun compte client pour l\'instant.</td></tr>';
     }
     function retirerVipClientUI(clientId) {
       confirmerActionAvantExecution('Retirer le VIP', 'Êtes-vous sûr de vouloir retirer le statut VIP de ce client ?', function () {
@@ -8483,7 +8839,7 @@
     }
     function switchPatronSection(section, btnEl) {
       if (!antispamNavigation_()) return;
-      ['employes', 'stats', 'absences', 'fisc', 'ventesexport', 'roles', 'suspensions', 'paie', 'contrats', 'cigares'].forEach(s => document.getElementById('patron-sub-' + s).classList.toggle('hidden', s !== section));
+      ['employes', 'stats', 'absences', 'fisc', 'ventesexport', 'roles', 'suspensions', 'paie', 'contrats', 'accesadmin', 'cigares'].forEach(s => document.getElementById('patron-sub-' + s).classList.toggle('hidden', s !== section));
       document.querySelectorAll('#patron-subnav button').forEach(b => b.classList.remove('active'));
       if (btnEl) btnEl.classList.add('active');
       if (section === 'stats') chargerStatsSuccursales();
@@ -8493,6 +8849,7 @@
       if (section === 'suspensions') { renderSuspensionsActuelles(); chargerHistoriqueSuspensions(); }
       if (section === 'paie') { renderPaieTable(); chargerCommissionsSemaine(); chargerSalairesRole(); }
       if (section === 'contrats') chargerContrats();
+      if (section === 'accesadmin') chargerDemandesAdmin();
       if (section === 'cigares') renderMsCigaresListe();
     }
 
@@ -10453,7 +10810,7 @@
     const ONGLETS_DISPONIBLES = [
       ['dashboard', 'Tableau de bord'], ['shifts', 'Shifts'], ['ventes', 'Ventes'], ['achats', 'Dépenses'],
       ['articles', 'Articles'], ['stock', 'Stock'], ['ingredients', 'Ingrédients'], ['gestion-client', 'Gestion client'], ['objectifs', 'Objectifs'], ['agenda', 'Agenda'],
-      ['chat', 'Chat'], ['dj', 'DJ'], ['rapports-analyses', 'Rapports'], ['cloture', 'Clôture'], ['liste-noire', 'Liste noire'], ['soirees', 'Soirées'], ['rapports-entreprise', 'Rapports Entreprise'],
+      ['chat', 'Chat'], ['dj', 'DJ'], ['rapports-analyses', 'Rapports'], ['cloture', 'Clôture'], ['planning', 'Planning'], ['reglement', 'Règlement'], ['liste-noire', 'Liste noire'], ['soirees', 'Soirées'], ['rapports-entreprise', 'Rapports Entreprise'],
       ['section-patron', 'Patron'], ['admin', 'Admin'], ['claque', 'Claque'], ['master-settings', 'Master Settings']
     ];
     const SECTIONS_DASHBOARD_DISPONIBLES = [
