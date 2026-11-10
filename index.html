@@ -989,6 +989,15 @@
     .chat-compose button:hover { opacity: .85; }
     .notif-bell { position: relative; cursor: pointer; font-size: 18px; user-select: none; }
     #tbl-salaires-role td, #tbl-salaires-previsions td { vertical-align: middle; }
+    .soirees-grille { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 520px)); justify-content: center; gap: 16px; margin-top: 8px; }
+    .soiree-carte { position: relative; display: flex; gap: 16px; padding: 18px; border: 1px solid var(--border); border-radius: 12px; background: rgba(var(--lueur-a), .06); }
+    .soiree-date { flex: none; align-self: flex-start; width: 70px; text-align: center; border: 1px solid var(--gold); border-radius: 10px; padding: 8px 4px; color: var(--gold); }
+    .soiree-date b { display: block; font-size: 28px; line-height: 1; }
+    .soiree-date span { font-size: 12px; text-transform: uppercase; letter-spacing: .08em; }
+    .soiree-corps h3 { margin: 0 0 4px; font-size: 20px; color: var(--text); }
+    .soiree-meta { font-size: 13px; color: var(--text-mute); margin-bottom: 6px; }
+    .soiree-desc { font-size: 14px; color: var(--text-mute); }
+    .resa-espace { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding: 12px 14px; margin-bottom: 8px; border: 1px solid var(--border); border-radius: 10px; background: var(--bg-card); }
     .reduc-boutons { gap: 6px; flex-wrap: wrap; margin-top: 6px; }
     .reduc-boutons .filter-btn.actif { background: linear-gradient(135deg, var(--gold), var(--pink-deep)); color: var(--bg); border-color: transparent; font-weight: 700; }
     .statut-club { position: relative; display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; border: 1px solid var(--red); border-radius: 999px; cursor: pointer; user-select: none; font-size: 13px; font-weight: 600; color: var(--text); background: rgba(0,0,0,.2); }
@@ -1330,6 +1339,9 @@
           <div class="vit-carte-nav" onclick="allerPageVitrine('carte')">
             <svg class="carte-coin hg" aria-hidden="true"><use href="#orn-coin"/></svg><svg class="carte-coin hd" aria-hidden="true"><use href="#orn-coin"/></svg><svg class="carte-coin bg" aria-hidden="true"><use href="#orn-coin"/></svg><svg class="carte-coin bd" aria-hidden="true"><use href="#orn-coin"/></svg><div class="vit-icone">✦</div><h3 class="vit-nav-titre">LA CARTE</h3><div class="small">Nos cocktails signature</div>
           </div>
+          <div class="vit-carte-nav" onclick="allerPageVitrine('soirees')">
+            <svg class="carte-coin hg" aria-hidden="true"><use href="#orn-coin"/></svg><svg class="carte-coin hd" aria-hidden="true"><use href="#orn-coin"/></svg><svg class="carte-coin bg" aria-hidden="true"><use href="#orn-coin"/></svg><svg class="carte-coin bd" aria-hidden="true"><use href="#orn-coin"/></svg><div class="vit-icone">✦</div><h3 class="vit-nav-titre">SOIRÉES</h3><div class="small">Les nuits à venir</div>
+          </div>
           <div class="vit-carte-nav" onclick="allerPageVitrine('vip')">
             <svg class="carte-coin hg" aria-hidden="true"><use href="#orn-coin"/></svg><svg class="carte-coin hd" aria-hidden="true"><use href="#orn-coin"/></svg><svg class="carte-coin bg" aria-hidden="true"><use href="#orn-coin"/></svg><svg class="carte-coin bd" aria-hidden="true"><use href="#orn-coin"/></svg><div class="vit-icone">✦</div><h3 class="vit-nav-titre">VIP</h3><div class="small">L'accès sur invitation</div>
           </div>
@@ -1362,6 +1374,13 @@
           <div class="carte-diviseur">◆</div>
         </div>
         <div class="carte-grille" id="vitrine-menu"></div>
+      </div>
+
+      <div id="vitrine-page-soirees" class="vitrine-page hidden">
+        <div class="orne-page orne-large">
+          <div class="orne-entete"><svg class="orne-orn" aria-hidden="true"><use href="#orn-haut"/></svg><h2 class="orne-titre">Soirées</h2><div class="orne-sous">Les prochaines nuits à The Palace</div></div>
+          <div class="soirees-grille" id="vitrine-soirees"></div>
+        </div>
       </div>
 
       <div id="vitrine-page-vip" class="vitrine-page hidden">
@@ -1433,7 +1452,12 @@
         <div id="moncompte-vip" class="mt16"></div>
         <div class="mt16">
           <h2>Mes réservations</h2>
-          <div class="small">Le suivi de ta demande se trouve dans l'onglet <a class="linklike" onclick="allerPageVitrine('reserver')">Réserver</a>.</div>
+          <div id="moncompte-reservations"><div class="small">Chargement...</div></div>
+          <button class="btn-ghost mt10" onclick="allerPageVitrine('reserver')">Faire une nouvelle réservation</button>
+        </div>
+        <div class="mt16">
+          <h2>Prochaines soirées</h2>
+          <div id="moncompte-soirees"></div>
         </div>
         <div class="card mt16" style="max-width:420px;">
           <h2>Mon compte</h2>
@@ -1590,6 +1614,7 @@
               <div id="dash-periode-boutons">
                 <button class="ms-sidebar-item active" onclick="changerPeriodeDashboard('7j', this)">Semaine</button>
                 <button class="ms-sidebar-item" onclick="changerPeriodeDashboard('30j', this)">Mois</button>
+                <button class="ms-sidebar-item" onclick="changerPeriodeDashboard('tout', this)">Depuis le début</button>
               </div>
               <div class="ms-sidebar-titre" style="margin-top:14px;">Affichage</div>
               <button class="ms-sidebar-item" id="btn-toggle-leaderboard" onclick="toggleLeaderboardPanel()">Masquer le classement</button>
@@ -1610,6 +1635,15 @@
                   <div class="card"><div class="kpi-label">Fisc (<span id="d30-taux">0</span>%)</div><div class="kpi-value kpi-red" id="d30-fisc">$0</div></div>
                   <div class="card"><div class="kpi-label">Profit après Fisc</div><div class="kpi-value kpi-gold" id="d30-net">$0</div></div>
                   <div class="card"><div class="kpi-label">Nb ventes</div><div class="kpi-value kpi-cyan" id="d30-nb">0</div></div>
+                </div>
+              </div>
+              <div id="dash-section-kpistout" class="hidden">
+                <div class="grid grid-4 mb10">
+                  <div class="card"><div class="kpi-label">Revenus (depuis le début)</div><div class="kpi-value kpi-green" id="dt-revenus">$0</div></div>
+                  <div class="card"><div class="kpi-label">Dépenses</div><div class="kpi-value kpi-red" id="dt-depenses">$0</div></div>
+                  <div class="card"><div class="kpi-label">Fisc (<span id="dt-taux">0</span>%)</div><div class="kpi-value kpi-red" id="dt-fisc">$0</div></div>
+                  <div class="card"><div class="kpi-label">Profit après Fisc</div><div class="kpi-value kpi-gold" id="dt-net">$0</div></div>
+                  <div class="card"><div class="kpi-label">Nb ventes</div><div class="kpi-value kpi-cyan" id="dt-nb">0</div></div>
                 </div>
               </div>
               <div class="grid grid-2 mb10" id="dash-section-personnel">
@@ -1731,6 +1765,7 @@
               <div id="cart-list"><div class="small">Panier vide.</div></div>
               <label class="mt10">Compte client <span class="small">(facultatif - applique automatiquement la réduction VIP)</span></label>
               <select id="cart-client" onchange="surChangementClientVente_('cart-client', 'CART')"></select>
+              <div class="err hidden" id="cart-liste-noire" style="margin-top:6px;"></div>
               <label class="mt10">Réduction VIP <span class="small">(Silver -5 %, Gold -10 %, Diamond -15 % - total arrondi aux 5 $)</span></label>
               <div class="flex reduc-boutons" id="cart-reductions">
                 <button type="button" class="filter-btn actif" data-pct="0" onclick="definirReductionPanier_(0)">Aucune</button>
@@ -2645,6 +2680,78 @@
         </div>
       </section>
 
+      <section id="tab-cloture" class="hidden">
+        <div class="card mb10">
+          <div class="flex-between mb10">
+            <h2 style="margin:0;">Clôture de soirée</h2>
+            <div class="flex"><input type="date" id="cloture-date" style="width:auto;" onchange="chargerApercuCloture()"><button class="btn-ghost" onclick="chargerApercuCloture()">Actualiser</button></div>
+          </div>
+          <div class="small mb10">Une soirée va de 12 h à 12 h le lendemain (ventes d'après minuit comprises). Les ventes saisies après la clôture ne sont pas ajoutées à son bilan.</div>
+          <div id="cloture-statut" class="mb10"></div>
+          <div class="grid grid-4" id="cloture-kpis"></div>
+        </div>
+        <div class="grid grid-2">
+          <div class="card"><h2 style="margin:0 0 10px;">Comparatif</h2><div class="table-wrap"><table><thead><tr><th>Soirée</th><th>Ventes</th><th>Pourboires</th><th>Lignes</th><th>Écart ventes</th></tr></thead><tbody id="cloture-comparatif"></tbody></table></div></div>
+          <div class="card"><h2 style="margin:0 0 10px;">Top articles</h2><div class="table-wrap"><table><thead><tr><th>Article</th><th>Qté</th><th>CA</th></tr></thead><tbody id="cloture-top"></tbody></table></div><div id="cloture-vip" class="small mt10"></div></div>
+        </div>
+        <div class="card mt16"><h2 style="margin:0 0 10px;">Ventes par employé</h2><div class="table-wrap"><table><thead><tr><th>Employé</th><th>Lignes</th><th>Ventes</th><th>Pourboires encaissés</th></tr></thead><tbody id="cloture-equipe"></tbody></table></div></div>
+        <div class="card mt16">
+          <div class="flex-between mb10"><h2 style="margin:0;">Partage des pourboires</h2><span class="small" id="cloture-pool"></span></div>
+          <div class="small mb10">Les pourboires encaissés pendant la soirée sont mis en commun, puis partagés entre le personnel qui était en shift ou qui a vendu.</div>
+          <div class="grid grid-2 mb10">
+            <div><label>Mode de partage</label><select id="cloture-mode"><option value="egal">Parts égales</option><option value="ventes">Proportionnel aux ventes de chacun</option></select></div>
+            <div><label>Rôles exclus du partage</label><div id="cloture-roles" class="flex" style="flex-wrap:wrap;gap:8px;"></div></div>
+          </div>
+          <button class="btn-ghost mb10" onclick="enregistrerReglesPourboires()">Enregistrer les règles</button>
+          <div class="table-wrap"><table><thead><tr><th>Employé</th><th>Rôle</th><th>Présence</th><th>Ventes</th><th>Part de pourboire</th></tr></thead><tbody id="cloture-parts"></tbody></table></div>
+          <div class="flex mt10" id="cloture-actions"></div>
+          <div class="err" id="cloture-err"></div>
+        </div>
+        <div class="card mt16"><h2 style="margin:0 0 10px;">Historique des clôtures</h2><div class="table-wrap"><table><thead><tr><th>Soirée</th><th>Ventes</th><th>Pourboires</th><th>Employés</th><th>Statut</th><th></th></tr></thead><tbody id="cloture-historique"></tbody></table></div></div>
+      </section>
+
+      <section id="tab-liste-noire" class="hidden">
+        <div class="card mb10" id="ln-form-carte">
+          <h2 style="margin:0 0 6px;">Ajouter à la liste noire</h2>
+          <div class="small mb10">« Surveillance » : le personnel est prévenu. « Interdit » : plus de réservation ni de demande VIP depuis le site.</div>
+          <div class="grid grid-3">
+            <div><label>Nom</label><input id="ln-nom" placeholder="Prénom Nom"></div>
+            <div><label>Téléphone</label><input id="ln-tel" placeholder="555-XXX-XXXX" oninput="formaterTelephone_(this)"></div>
+            <div><label>Compte client (facultatif)</label><select id="ln-client"></select></div>
+            <div><label>Niveau</label><select id="ln-niveau"><option value="Surveillance">Surveillance</option><option value="Interdit">Interdit</option></select></div>
+            <div><label>Jusqu'au (facultatif)</label><input type="date" id="ln-expire"></div>
+            <div><label>Motif</label><input id="ln-motif" placeholder="Ex : bagarre, vol, harcèlement..."></div>
+          </div>
+          <button class="btn-primary mt10" onclick="ajouterListeNoireUI()">Ajouter</button>
+          <div class="err" id="ln-err"></div>
+        </div>
+        <div class="card mb10"><h2 style="margin:0 0 10px;">Personnes concernées <span class="small" id="ln-compte"></span></h2>
+          <div class="table-wrap"><table><thead><tr><th>Nom</th><th>Téléphone</th><th>Niveau</th><th>Motif</th><th>Ajouté</th><th>Fin</th><th></th></tr></thead><tbody id="ln-actifs"></tbody></table></div></div>
+        <details class="ms-groupe mb10"><summary>Entrées levées ou expirées</summary><div class="ms-groupe-corps"><div class="table-wrap"><table><thead><tr><th>Nom</th><th>Niveau</th><th>Motif</th><th>Levée par</th></tr></thead><tbody id="ln-leves"></tbody></table></div></div></details>
+      </section>
+
+      <section id="tab-soirees" class="hidden">
+        <div class="card mb10" id="so-form-carte">
+          <h2 style="margin:0 0 6px;"><span id="so-form-titre">Nouvelle soirée</span></h2>
+          <div class="small mb10">Les soirées « visibles » s'affichent sur la page Soirées du site, jusqu'à leur date.</div>
+          <input type="hidden" id="so-id">
+          <div class="grid grid-3">
+            <div><label>Titre</label><input id="so-titre" maxlength="80" placeholder="Ex : Nuit Champagne"></div>
+            <div><label>Date</label><input type="date" id="so-date"></div>
+            <div><label>Heure</label><input type="time" id="so-heure"></div>
+            <div><label>DJ / artiste</label><input id="so-dj" maxlength="60"></div>
+            <div><label>Thème / tenue</label><input id="so-theme" maxlength="60" placeholder="Ex : Tenue de gala"></div>
+            <div><label>Entrée / prix</label><input id="so-prix" maxlength="30" placeholder="Ex : Entrée libre"></div>
+          </div>
+          <label class="mt10">Description</label>
+          <textarea id="so-desc" maxlength="500" rows="3"></textarea>
+          <label class="rester-connecte mt10" for="so-visible"><input type="checkbox" id="so-visible" checked><span class="rester-case" aria-hidden="true"></span><span>Visible sur le site</span></label>
+          <div class="flex mt10"><button class="btn-primary" onclick="enregistrerSoireeUI()">Enregistrer</button><button class="btn-ghost" onclick="resetFormSoiree_()">Nouveau</button></div>
+          <div class="err" id="so-err"></div>
+        </div>
+        <div class="card"><h2 style="margin:0 0 10px;">Soirées</h2><div class="table-wrap"><table><thead><tr><th>Date</th><th>Titre</th><th>DJ</th><th>Visible</th><th></th></tr></thead><tbody id="so-liste"></tbody></table></div></div>
+      </section>
+
       <section id="tab-rapports-analyses" class="hidden">
         <div class="card mb10">
           <div class="flex-between mb10">
@@ -3360,6 +3467,10 @@
           <div class="card"><div class="kpi-label">Heures travaillées</div><div class="kpi-value kpi-cyan" id="profil-heures">0 h</div></div>
           <div class="card"><div class="kpi-label">Chiffre d'affaires généré</div><div class="kpi-value kpi-green" id="profil-ca">$0</div></div>
           <div class="card hidden" id="profil-depenses-card"><div class="kpi-label">Dépenses (boîte)</div><div class="kpi-value kpi-red" id="profil-depenses">$0</div></div>
+        </div>
+        <div class="card mb10" id="profil-pourboires-card">
+          <div class="flex-between"><h3 style="margin:0;">Mes pourboires</h3><span class="small" id="profil-pourboires-total"></span></div>
+          <div class="table-wrap"><table><thead><tr><th>Soirée</th><th>Ma part</th><th>Statut</th></tr></thead><tbody id="profil-pourboires-corps"></tbody></table></div>
         </div>
         <div class="grid grid-2 mb10">
           <div class="card">
@@ -4080,7 +4191,7 @@
       if (CURRENT_USER.typeCompte !== 'client') {
         (DATA.reservations || []).filter(r => r.Statut === 'En attente').forEach(r => {
           notifs.push({
-            id: 'resa-attente-' + r.ID, categorie: 'Réservations', texte: r.Nom + ' a demandé une réservation le ' + fmtJour_(r.DateReservation) + (r.Commande ? ' (avec précommande)' : ''), couleur: 'var(--gold)',
+            id: 'resa-attente-' + r.ID, categorie: 'Réservations', texte: r.Nom + ' a demandé une réservation le ' + fmtJour_(r.DateReservation) + (r.Commande ? ' (avec précommande)' : '') + (r.ListeNoire ? ' - ⚠ liste noire (' + r.ListeNoire + ')' : ''), couleur: 'var(--gold)',
             cible: function () {
               switchTab('gestion-client', document.getElementById('nav-tab-gestion-client'));
               const btnResa = document.querySelector('#gc-subnav button[onclick*="reservations"]');
@@ -4606,6 +4717,224 @@
         .setRecetteArticle(id, lignes, CURRENT_USER.sessionToken);
     }
 
+
+    // ===== Clôture de soirée et partage des pourboires =====
+    let CLOTURE = null;
+    function chargerCloture() {
+      chargerReglesCloture_();
+      chargerApercuCloture();
+      chargerHistoriqueCloture_();
+    }
+    function chargerApercuCloture() {
+      const inp = document.getElementById('cloture-date');
+      document.getElementById('cloture-kpis').innerHTML = '<div class="small">Chargement...</div>';
+      document.getElementById('cloture-err').textContent = '';
+      google.script.run.withSuccessHandler(function (r) { CLOTURE = r; if (!inp.value) inp.value = r.soiree; renderApercuCloture(); })
+        .withFailureHandler(onError).getApercuCloture(inp.value || '', CURRENT_USER.sessionToken);
+    }
+    function ecartPourcent_(cur, ref) {
+      if (!(ref > 0)) return '<span class="small">-</span>';
+      const p = Math.round((cur - ref) / ref * 100);
+      return '<span class="' + (p >= 0 ? 'kpi-green' : 'kpi-red') + '" style="font-weight:700;">' + (p > 0 ? '+' : '') + p + ' %</span>';
+    }
+    function renderApercuCloture() {
+      const r = CLOTURE; if (!r) return;
+      const k = r.kpis;
+      const carte = (lib, val, cls) => `<div class="card"><div class="kpi-label">${lib}</div><div class="kpi-value ${cls}">${val}</div></div>`;
+      document.getElementById('cloture-kpis').innerHTML = carte('Ventes de la soirée', money(k.revenus), 'kpi-green') + carte('Pourboires à partager', money(k.pourboires), 'kpi-gold') +
+        carte('Lignes de vente', k.lignes, 'kpi-cyan') + carte('Panier moyen', money(k.panierMoyen), 'kpi-cyan') +
+        carte('Dépenses de la soirée', money(k.depenses), 'kpi-red') + carte('Exports', money(k.exportsTotal), 'kpi-gold');
+      const dc = r.dejaCloturee;
+      document.getElementById('cloture-statut').innerHTML = dc
+        ? `<span class="pill ${dc.verse ? 'pill-dispo' : 'pill-bas'}">Clôturée par ${escapeHtml(dc.par)} le ${fmtDate(dc.date)}${dc.verse ? ' - pourboires versés' : ' - pourboires à verser'}</span>`
+        : '<span class="pill pill-bas">Soirée non clôturée</span>';
+      const c = r.comparatif;
+      const ligne = (lib, d, ref) => `<tr><td>${lib}</td><td class="kpi-gold">${money(d.revenus)}</td><td>${money(d.pourboires)}</td><td>${d.lignes}</td><td>${ref ? ecartPourcent_(k.revenus, d.revenus) : ''}</td></tr>`;
+      document.getElementById('cloture-comparatif').innerHTML = ligne('<b>Cette soirée</b> (' + fmtJour_(r.soiree + 'T12:00:00') + ')', { revenus: k.revenus, pourboires: k.pourboires, lignes: k.lignes }, false) +
+        ligne('Veille (' + fmtJour_(c.veille.soiree + 'T12:00:00') + ')', c.veille, true) + ligne('Même jour, semaine dernière (' + fmtJour_(c.semaineDerniere.soiree + 'T12:00:00') + ')', c.semaineDerniere, true);
+      document.getElementById('cloture-top').innerHTML = r.topArticles.map(a => `<tr><td>${escapeHtml(a.article)}</td><td>${a.qte}</td><td class="kpi-gold">${money(a.ca)}</td></tr>`).join('') || '<tr><td colspan="3" class="small">Aucune vente.</td></tr>';
+      document.getElementById('cloture-vip').textContent = 'Adhésions VIP : ' + money(r.vip.ca) + ' (' + r.vip.nb + ') - Précommandes encaissées : ' + money(r.precommandes.ca) + ' (' + r.precommandes.nb + ')';
+      document.getElementById('cloture-equipe').innerHTML = r.parEmploye.map(e => `<tr><td>${escapeHtml(e.nom)}</td><td>${e.lignes}</td><td class="kpi-gold">${money(e.ca)}</td><td>${money(e.tips)}</td></tr>`).join('') || '<tr><td colspan="4" class="small">Aucune vente.</td></tr>';
+      document.getElementById('cloture-pool').textContent = 'Total à partager : ' + money(r.partage.pool) + ' entre ' + r.partage.nbEligibles + ' personne(s)';
+      document.getElementById('cloture-parts').innerHTML = r.partage.parts.map(p => `<tr><td>${escapeHtml(p.nom)}</td><td class="small">${escapeHtml(p.role)}</td><td class="small">${escapeHtml(p.raison)}</td><td>${money(p.ca)}</td><td class="kpi-gold" style="font-weight:700;">${money(p.montant)}</td></tr>`).join('') || '<tr><td colspan="5" class="small">Personne n\'est éligible : aucun shift ni vente sur cette soirée.</td></tr>';
+      document.getElementById('cloture-actions').innerHTML = dc
+        ? (dc.verse ? '<span class="small">Les pourboires de cette soirée ont déjà été versés.</span>' : `<button class="btn-primary" onclick="verserPourboiresUI('${dc.id}')">Verser les pourboires</button>`)
+        : '<button class="btn-primary" onclick="cloturerSoireeUI()">Clôturer la soirée</button>';
+    }
+    function chargerReglesCloture_() {
+      google.script.run.withSuccessHandler(function (r) {
+        document.getElementById('cloture-mode').value = r.mode;
+        document.getElementById('cloture-roles').innerHTML = r.roles.map(role => `<label class="rester-connecte" style="margin:0;"><input type="checkbox" class="cloture-role" value="${escapeHtml(role)}" ${r.rolesExclus.indexOf(role) !== -1 ? 'checked' : ''}><span class="rester-case" aria-hidden="true"></span><span>${escapeHtml(role)}</span></label>`).join('');
+      }).withFailureHandler(function () {}).getReglesPourboires(CURRENT_USER.sessionToken);
+    }
+    function enregistrerReglesPourboires() {
+      const mode = document.getElementById('cloture-mode').value;
+      const roles = [...document.querySelectorAll('.cloture-role:checked')].map(i => i.value);
+      google.script.run.withSuccessHandler(function () { showToast('Règles de partage enregistrées.'); chargerApercuCloture(); }).withFailureHandler(onError).setReglesPourboires(mode, roles, CURRENT_USER.sessionToken);
+    }
+    function cloturerSoireeUI() {
+      const jour = CLOTURE ? CLOTURE.soiree : document.getElementById('cloture-date').value;
+      confirmerActionAvantExecution('Clôturer la soirée', 'Clôturer la soirée du ' + fmtJour_(jour + 'T12:00:00') + ' ? Le bilan et le partage des pourboires seront figés.', function () {
+        google.script.run.withSuccessHandler(function (res) {
+          showToast('Soirée clôturée : ' + money(res.pourboires) + ' de pourboires partagés entre ' + res.nbParts + ' personne(s).');
+          chargerCloture();
+        }).withFailureHandler(function (err) { document.getElementById('cloture-err').textContent = err.message || String(err); }).cloturerSoiree(jour, CURRENT_USER.sessionToken);
+      });
+    }
+    function verserPourboiresUI(id) {
+      confirmerActionAvantExecution('Verser les pourboires', 'Créer un versement de paie pour chaque employé concerné ?', function () {
+        google.script.run.withSuccessHandler(function (res) {
+          showToast('Pourboires versés : ' + money(res.total) + ' à ' + res.nb + ' personne(s).');
+          chargerCloture();
+        }).withFailureHandler(function (err) { document.getElementById('cloture-err').textContent = err.message || String(err); }).verserPourboires(id, CURRENT_USER.sessionToken);
+      });
+    }
+    function chargerHistoriqueCloture_() {
+      google.script.run.withSuccessHandler(function (l) {
+        document.getElementById('cloture-historique').innerHTML = l.map(c => `<tr>
+          <td>${fmtJour_(c.soiree + 'T12:00:00')}<div class="small">par ${escapeHtml(c.cloturePar)}</div></td><td class="kpi-gold">${money(c.revenus)}</td><td>${money(c.pourboires)}</td>
+          <td class="small">${c.parts.map(p => escapeHtml(p.nom) + ' ' + money(p.montant) + (p.verse ? '' : ' (à verser)')).join(' · ') || '-'}</td>
+          <td><span class="pill ${c.verse ? 'pill-dispo' : 'pill-bas'}">${c.verse ? 'Versés' : 'À verser'}</span></td>
+          <td>${c.verse ? '' : `<a class="linklike" onclick="verserPourboiresUI('${c.id}')">Verser</a>`}</td></tr>`).join('') || '<tr><td colspan="6" class="small">Aucune soirée clôturée.</td></tr>';
+      }).withFailureHandler(function () {}).getClotures(CURRENT_USER.sessionToken);
+    }
+
+    // ===== Liste noire =====
+    let LISTE_NOIRE = null;
+    function chargerListeNoire() {
+      const sel = document.getElementById('ln-client');
+      const peupler = function () { sel.innerHTML = '<option value="">Aucun compte lié</option>' + (DATA.comptesClients || []).map(c => `<option value="${c.ID}">${escapeHtml((c.Prénom ? c.Prénom + ' ' : '') + c.Nom)}</option>`).join(''); };
+      if (DATA.comptesClients) peupler(); else google.script.run.withSuccessHandler(function (cl) { DATA.comptesClients = cl; peupler(); }).withFailureHandler(function () {}).getComptesClientsAvecVip();
+      google.script.run.withSuccessHandler(function (r) { LISTE_NOIRE = r; DATA.listeNoire = r.actifs; renderListeNoire(); }).withFailureHandler(onError).getListeNoire(CURRENT_USER.sessionToken);
+    }
+    function renderListeNoire() {
+      const r = LISTE_NOIRE; if (!r) return;
+      document.getElementById('ln-form-carte').classList.toggle('hidden', !r.peutGerer);
+      document.getElementById('ln-compte').textContent = '(' + r.actifs.length + ')';
+      const pill = n => '<span class="pill ' + (n === 'Interdit' ? 'pill-rupture' : 'pill-bas') + '">' + escapeHtml(n) + '</span>';
+      document.getElementById('ln-actifs').innerHTML = r.actifs.map(e => `<tr><td><b>${escapeHtml(e.Nom || '-')}</b></td><td class="small">${escapeHtml(e.Telephone || '-')}</td><td>${pill(e.Niveau)}</td><td class="small">${escapeHtml(e.Motif)}</td>
+        <td class="small">${fmtJour_(e.DateAjout)} par ${escapeHtml(e.AjoutePar)}</td><td class="small">${e.Expire ? fmtJour_(e.Expire) : 'Sans limite'}</td>
+        <td>${r.peutGerer ? `<a class="linklike" onclick="leverListeNoireUI('${e.ID}')">Lever</a>` : ''}</td></tr>`).join('') || '<tr><td colspan="7" class="small">Personne sur la liste noire.</td></tr>';
+      document.getElementById('ln-leves').innerHTML = r.leves.map(e => `<tr><td>${escapeHtml(e.Nom || '-')}</td><td>${escapeHtml(e.Niveau)}</td><td class="small">${escapeHtml(e.Motif)}</td><td class="small">${escapeHtml(e.LevePar || 'Expirée')}</td></tr>`).join('') || '<tr><td colspan="4" class="small">Aucune.</td></tr>';
+    }
+    function ajouterListeNoireUI() {
+      const err = document.getElementById('ln-err'); err.textContent = '';
+      google.script.run.withSuccessHandler(function () {
+        ['ln-nom', 'ln-tel', 'ln-motif', 'ln-expire'].forEach(id => { document.getElementById(id).value = ''; });
+        document.getElementById('ln-client').value = '';
+        showToast('Ajouté à la liste noire.'); chargerListeNoire();
+      }).withFailureHandler(function (e) { err.textContent = e.message || String(e); })
+        .ajouterListeNoire(document.getElementById('ln-nom').value, document.getElementById('ln-tel').value, document.getElementById('ln-client').value, document.getElementById('ln-niveau').value, document.getElementById('ln-motif').value, document.getElementById('ln-expire').value, CURRENT_USER.sessionToken);
+    }
+    function leverListeNoireUI(id) {
+      confirmerActionAvantExecution('Lever la restriction', 'Retirer cette personne de la liste noire ?', function () {
+        google.script.run.withSuccessHandler(function () { showToast('Restriction levée.'); chargerListeNoire(); }).withFailureHandler(onError).leverListeNoire(id, CURRENT_USER.sessionToken);
+      });
+    }
+
+    // ===== Soirées (gestion par le personnel) =====
+    function peutGererSoireesFront_() {
+      if (!CURRENT_USER || CURRENT_USER.typeCompte === 'client') return false;
+      const roles = ['Responsable Marketing', 'Community Manager', 'Gérant·e', 'Co-Patron·ne', 'Responsable', 'Secrétaire', 'DJ'];
+      return CURRENT_USER.Permission === 'Direction' || roles.indexOf(CURRENT_USER['Rôle']) !== -1 || ROLES_PATRON_.indexOf(CURRENT_USER['Rôle']) !== -1 || (!!CURRENT_USER.RoleSecondaire && roles.indexOf(CURRENT_USER.RoleSecondaire) !== -1);
+    }
+    let SOIREES_ADMIN = null;
+    function chargerSoireesAdmin() {
+      google.script.run.withSuccessHandler(function (r) { SOIREES_ADMIN = r; renderSoireesAdmin(); }).withFailureHandler(onError).getSoirees(CURRENT_USER.sessionToken);
+    }
+    function renderSoireesAdmin() {
+      const r = SOIREES_ADMIN; if (!r) return;
+      document.getElementById('so-form-carte').classList.toggle('hidden', !r.peutGerer);
+      document.getElementById('so-liste').innerHTML = r.soirees.map(x => `<tr><td>${fmtJour_(x.DateSoiree + 'T12:00:00')}${x.Heure ? ' <span class="small">' + escapeHtml(x.Heure) + '</span>' : ''}</td><td><b>${escapeHtml(x.Titre)}</b></td><td class="small">${escapeHtml(x.DJ || '-')}</td>
+        <td><span class="pill ${x.Visible ? 'pill-dispo' : 'pill-hs'}">${x.Visible ? 'Visible' : 'Masquée'}</span></td>
+        <td>${r.peutGerer ? `<a class="linklike" onclick="modifierSoireeUI('${x.ID}')">Modifier</a> · <a class="linklike" onclick="supprimerSoireeUI('${x.ID}')">Supprimer</a>` : ''}</td></tr>`).join('') || '<tr><td colspan="5" class="small">Aucune soirée.</td></tr>';
+    }
+    function resetFormSoiree_() {
+      ['so-id', 'so-titre', 'so-date', 'so-heure', 'so-dj', 'so-theme', 'so-prix', 'so-desc'].forEach(id => { document.getElementById(id).value = ''; });
+      document.getElementById('so-visible').checked = true;
+      document.getElementById('so-form-titre').textContent = 'Nouvelle soirée';
+      document.getElementById('so-err').textContent = '';
+    }
+    function modifierSoireeUI(id) {
+      const x = (SOIREES_ADMIN.soirees || []).find(y => y.ID === id); if (!x) return;
+      document.getElementById('so-id').value = x.ID; document.getElementById('so-titre').value = x.Titre; document.getElementById('so-date').value = x.DateSoiree;
+      document.getElementById('so-heure').value = x.Heure || ''; document.getElementById('so-dj').value = x.DJ || ''; document.getElementById('so-theme').value = x.Theme || '';
+      document.getElementById('so-prix').value = x.Prix || ''; document.getElementById('so-desc').value = x.Description || ''; document.getElementById('so-visible').checked = !!x.Visible;
+      document.getElementById('so-form-titre').textContent = 'Modifier la soirée';
+      document.getElementById('so-form-carte').scrollIntoView({ behavior: 'smooth' });
+    }
+    function enregistrerSoireeUI() {
+      const err = document.getElementById('so-err'); err.textContent = '';
+      const soiree = { ID: document.getElementById('so-id').value || '', Titre: document.getElementById('so-titre').value, DateSoiree: document.getElementById('so-date').value, Heure: document.getElementById('so-heure').value,
+        DJ: document.getElementById('so-dj').value, Theme: document.getElementById('so-theme').value, Prix: document.getElementById('so-prix').value, Description: document.getElementById('so-desc').value, Visible: document.getElementById('so-visible').checked };
+      google.script.run.withSuccessHandler(function () { showToast('Soirée enregistrée.'); resetFormSoiree_(); chargerSoireesAdmin(); })
+        .withFailureHandler(function (e) { err.textContent = e.message || String(e); }).saveSoiree(soiree, CURRENT_USER.sessionToken);
+    }
+    function supprimerSoireeUI(id) {
+      confirmerActionAvantExecution('Supprimer la soirée', 'Supprimer définitivement cette soirée ?', function () {
+        google.script.run.withSuccessHandler(function () { showToast('Soirée supprimée.'); chargerSoireesAdmin(); }).withFailureHandler(onError).deleteSoiree(id, CURRENT_USER.sessionToken);
+      });
+    }
+
+    // ===== Page publique « Soirées » =====
+    function renderSoireesVitrine_() {
+      const el = document.getElementById('vitrine-soirees'); if (!el) return;
+      const liste = DATA.soirees || [];
+      el.innerHTML = liste.map(x => {
+        const d = new Date(x.DateSoiree + 'T12:00:00');
+        const mois = d.toLocaleDateString('fr-FR', { month: 'short' }).replace('.', '');
+        const jourSemaine = d.toLocaleDateString('fr-FR', { weekday: 'long' });
+        const meta = [jourSemaine.charAt(0).toUpperCase() + jourSemaine.slice(1), x.Heure ? 'à ' + x.Heure : '', x.Prix].filter(Boolean).join(' - ');
+        return `<div class="soiree-carte">
+          <div class="soiree-date"><b>${d.getDate()}</b><span>${escapeHtml(mois)}</span></div>
+          <div class="soiree-corps"><h3>${escapeHtml(x.Titre)}</h3><div class="soiree-meta">${escapeHtml(meta)}</div>
+            ${x.DJ ? '<div class="soiree-meta">DJ : <b>' + escapeHtml(x.DJ) + '</b></div>' : ''}${x.Theme ? '<div class="soiree-meta">Ambiance : ' + escapeHtml(x.Theme) + '</div>' : ''}
+            ${x.Description ? '<div class="soiree-desc">' + escapeHtml(x.Description) + '</div>' : ''}
+            <button class="btn-ghost mt10" onclick="reserverPourSoiree_('${x.DateSoiree}')">Réserver pour cette soirée</button></div></div>`;
+      }).join('') || '<div class="orne-sous" style="grid-column:1/-1;text-align:center;">Aucune soirée annoncée pour le moment. Reviens très vite !</div>';
+    }
+    function reserverPourSoiree_(date) {
+      allerPageVitrine('reserver');
+      const el = document.getElementById('resa-date'); if (el) el.value = date;
+    }
+
+    // ===== Espace client enrichi =====
+    function chargerMonEspace_() {
+      google.script.run.withSuccessHandler(function (e) {
+        const elVip = document.getElementById('moncompte-vip');
+        if (e.vip) {
+          const v = e.vip; const d = formaterDecompteVip(v.expiration);
+          elVip.innerHTML = `<div class="card"><div class="kpi-label">Statut VIP</div>
+            <div style="font-weight:700;font-size:20px;margin-top:6px;">${escapeHtml(v.offre)}${v.actif ? '' : ' <span class="pill pill-rupture">expiré</span>'}</div>
+            <div class="${d.classe}" style="font-weight:600;margin-top:6px;">${d.texte}</div>
+            ${v.actif && v.reduction > 0 ? '<div class="small mt10">Ton avantage : <b>-' + v.reduction + ' %</b> sur la carte (total arrondi aux 5 $).</div>' : ''}
+            <button class="btn-ghost mt10" onclick="allerPageVitrine('vip')">${v.actif ? 'Renouveler ou changer d\'offre' : 'Redevenir VIP'}</button></div>`;
+        } else {
+          elVip.innerHTML = '<div class="card"><div class="small">Aucun statut VIP relié à ce compte pour l\'instant.</div><button class="btn-ghost mt10" onclick="allerPageVitrine(\'vip\')">Découvrir les offres VIP</button></div>';
+        }
+        const pillStatut = st => '<span class="pill ' + (st === 'Confirmée' ? 'pill-dispo' : (st === 'En attente' ? 'pill-bas' : 'pill-rupture')) + '">' + escapeHtml(st) + '</span>';
+        document.getElementById('moncompte-reservations').innerHTML = e.reservations.map(r => `<div class="resa-espace">
+          <div><b>${fmtJour_(r.date + 'T12:00:00')}</b> à ${escapeHtml(r.heure || '')} - ${r.personnes} personne${r.personnes > 1 ? 's' : ''}
+            ${r.numero ? '<div class="small">N° de réservation : <b>' + escapeHtml(r.numero) + '</b></div>' : ''}
+            ${r.commande ? '<div class="small">Précommande : ' + escapeHtml(r.commande) + (r.totalCommande > 0 ? ' - ' + money(r.totalCommande) : '') + (r.encaissee ? ' (réglée)' : '') + '</div>' : ''}
+            ${r.statut === 'Refusée' && r.raisonRefus ? '<div class="small" style="color:var(--red);">Motif : ' + escapeHtml(r.raisonRefus) + '</div>' : ''}</div>
+          <div class="flex" style="align-items:center;gap:10px;">${pillStatut(r.statut)}${r.peutAnnuler ? `<button class="btn-ghost" onclick="annulerReservationClient('${r.id}')">Annuler</button>` : ''}</div></div>`).join('') || '<div class="small">Aucune réservation pour l\'instant.</div>';
+        document.getElementById('moncompte-soirees').innerHTML = e.soirees.map(x => `<div class="resa-espace"><div><b>${escapeHtml(x.Titre)}</b><div class="small">${fmtJour_(x.DateSoiree + 'T12:00:00')}${x.Heure ? ' à ' + escapeHtml(x.Heure) : ''}${x.DJ ? ' - DJ ' + escapeHtml(x.DJ) : ''}</div></div><button class="btn-ghost" onclick="reserverPourSoiree_('${x.DateSoiree}')">Réserver</button></div>`).join('')
+          || '<div class="small">Aucune soirée annoncée pour le moment.</div>';
+      }).withFailureHandler(function () {
+        document.getElementById('moncompte-reservations').innerHTML = '<div class="small">Impossible de charger tes réservations pour le moment.</div>';
+      }).getMonEspaceClient(CURRENT_USER.sessionToken);
+    }
+    function annulerReservationClient(id) {
+      confirmerActionAvantExecution('Annuler la réservation', 'Veux-tu vraiment annuler cette réservation ?', function () {
+        google.script.run.withSuccessHandler(function () {
+          showToast('Réservation annulée.');
+          chargerMonEspace_();
+          if (typeof chargerStatutReservationClient_ === 'function') chargerStatutReservationClient_();
+        }).withFailureHandler(onError).annulerMaReservation(id, CURRENT_USER.sessionToken);
+      });
+    }
+
     // ===== Rester connecté =====
     function memoriserSessionLongue_(token) { try { localStorage.setItem('unicorn_session_longue', JSON.stringify({ token: token })); } catch (e) {  } }
     function oublierSessionLongueLocale_() { try { localStorage.removeItem('unicorn_session_longue'); } catch (e) {  } }
@@ -4742,6 +5071,7 @@
         if (!d) return;
         DATA.statutClubManuel = d.statutClubManuel || '';
         if (d.horairesOuverture) DATA.horairesOuverture = d.horairesOuverture;
+        if (d.soirees) { DATA.soirees = d.soirees; renderSoireesVitrine_(); }
         majStatutHorairesVitrine_();
       }).withFailureHandler(function () {}).getInitialData();
     }
@@ -4926,7 +5256,8 @@
       const estClientConnecte = !!CURRENT_USER && CURRENT_USER.typeCompte === 'client';
       const pageClientActive = DATA.pageClientActive !== false;
       const reservationsActives = DATA.reservationsActives !== false;
-      const pagesNav = [['accueil', 'Accueil'], ['horaires', 'Horaires'], ['carte', 'La carte'], ['vip', 'VIP']];
+      const pagesNav = [['accueil', 'Accueil'], ['horaires', 'Horaires'], ['carte', 'La carte'], ['soirees', 'Soirées'], ['vip', 'VIP']];
+      renderSoireesVitrine_();
       if (pageClientActive && reservationsActives) pagesNav.push(['reserver', 'Réserver']);
       if (aproposDisponible) pagesNav.push(['apropos', 'À propos']);
       if (contactDisponible) pagesNav.push(['contact', 'Contact']);
@@ -4944,16 +5275,7 @@
         document.getElementById('moncompte-nom').textContent = (CURRENT_USER.Prénom ? CURRENT_USER.Prénom + ' ' : '') + CURRENT_USER.Nom;
         document.getElementById('moncompte-telephone').value = CURRENT_USER.Téléphone || '';
         document.getElementById('btn-changer-mdp-client').classList.toggle('hidden', !!CURRENT_USER.enTantQue);
-        google.script.run.withSuccessHandler(function (fiche) {
-          const el = document.getElementById('moncompte-vip');
-          if (fiche) {
-            const d = formaterDecompteVip(fiche.DateExpiration);
-            el.innerHTML = `<div class="card"><div class="kpi-label">Statut VIP</div><div style="font-weight:700;font-size:20px;margin-top:6px;">${escapeHtml(fiche.OffreNom || '')}</div>
-              <div class="${d.classe}" style="font-weight:600;margin-top:6px;">${d.texte}</div></div>`;
-          } else {
-            el.innerHTML = '<div class="card"><div class="small">Aucun statut VIP relié à ce compte pour l\'instant.</div></div>';
-          }
-        }).withFailureHandler(function () {}).getMaFicheVip(CURRENT_USER.ID);
+        chargerMonEspace_();
       }
 
       if (CURRENT_USER) {
@@ -6062,6 +6384,9 @@
         { id: 'chat', label: 'Chat', mgmtOnly: false },
         { id: 'dj', label: 'DJ', mgmtOnly: false },
         { id: 'rapports-analyses', label: 'Rapports', mgmtOnly: true },
+        { id: 'cloture', label: 'Clôture', mgmtOnly: true },
+        { id: 'liste-noire', label: 'Liste noire', mgmtOnly: false },
+        { id: 'soirees', label: 'Soirées', mgmtOnly: false, condition: function () { return peutGererSoireesFront_(); } },
         { id: 'rapports-entreprise', label: 'Rapports Entreprise', mgmtOnly: false, rapportsOnly: true },
         { id: 'section-patron', label: labelPatronSection, mgmtOnly: false, creerOnly: true },
         { id: 'admin', label: 'Admin', mgmtOnly: false, adminSectionOnly: true },
@@ -6093,8 +6418,9 @@
       const ongletsRoleSecondaire = (permRoleSecondaire && permRoleSecondaire.ongletsDefinis) ? permRoleSecondaire.onglets : [];
 
       const menusDesactifs = DATA.menusDesactifs || [];
-      const TOUJOURS_VISIBLES = ['agenda', 'chat', 'dj'];
+      const TOUJOURS_VISIBLES = ['agenda', 'chat', 'dj', 'liste-noire', 'soirees'];
       tabs.forEach(tab => {
+        if (tab.condition && !tab.condition()) return;
 
         if (menusDesactifs.indexOf(tab.id) !== -1) return;
 
@@ -6292,7 +6618,14 @@
       return new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0);
     }
 
+    function chargerMesPourboires_() {
+      google.script.run.withSuccessHandler(function (r) {
+        document.getElementById('profil-pourboires-total').textContent = r.enAttente > 0 ? 'À recevoir : ' + money(r.enAttente) : (r.lignes.length ? 'Tout est versé' : '');
+        document.getElementById('profil-pourboires-corps').innerHTML = r.lignes.map(l => `<tr><td>${fmtJour_(l.soiree + 'T12:00:00')}</td><td class="kpi-gold" style="font-weight:700;">${money(l.montant)}</td><td><span class="pill ${l.verse ? 'pill-dispo' : 'pill-bas'}">${l.verse ? 'Versé' : 'À recevoir'}</span></td></tr>`).join('') || '<tr><td colspan="3" class="small">Aucun pourboire partagé pour l\'instant.</td></tr>';
+      }).withFailureHandler(function () {}).getMesPourboires(CURRENT_USER.sessionToken);
+    }
     function chargerProfil() {
+      chargerMesPourboires_();
       renderProfilFiltres();
       let debutOverride = null, finOverride = null;
       if (PROFIL_PERIODE === 'semaine') {
@@ -6343,7 +6676,7 @@
       if (id === ONGLET_ACTUEL) return; 
       if (!antispamNavigation_()) return;
       ONGLET_ACTUEL = id;
-      ['dashboard', 'ventes', 'shifts', 'achats', 'section-patron', 'admin', 'claque', 'articles', 'stock', 'ingredients', 'gestion-client', 'objectifs', 'agenda', 'chat', 'dj', 'master-settings', 'rapports-entreprise', 'rapports-analyses'].forEach(t => {
+      ['dashboard', 'ventes', 'shifts', 'achats', 'section-patron', 'admin', 'claque', 'articles', 'stock', 'ingredients', 'gestion-client', 'objectifs', 'agenda', 'chat', 'dj', 'master-settings', 'rapports-entreprise', 'rapports-analyses', 'cloture', 'liste-noire', 'soirees'].forEach(t => {
         document.getElementById('tab-' + t).classList.add('hidden');
       });
       document.getElementById('tab-' + id).classList.remove('hidden');
@@ -6365,6 +6698,9 @@
       if (id === 'master-settings') renderMasterSettingsGate();
       if (id === 'rapports-entreprise') chargerRapportEntreprise();
       if (id === 'rapports-analyses') chargerRapportsAnalyses(RAPPORT_ANALYSE_PERIODE);
+      if (id === 'cloture') chargerCloture();
+      if (id === 'liste-noire') chargerListeNoire();
+      if (id === 'soirees') chargerSoireesAdmin();
       if (id === 'agenda') chargerAgenda();
       if (id === 'chat') { chargerChat(); majBadgeChat(0); } else arreterSondageChat();
       if (id === 'dj') chargerLiensDJ();
@@ -6616,6 +6952,7 @@
     function changerPeriodeDashboard(periode, btnEl) {
       document.getElementById('dash-section-kpis7j').classList.toggle('hidden', periode !== '7j');
       document.getElementById('dash-section-kpis30j').classList.toggle('hidden', periode !== '30j');
+      document.getElementById('dash-section-kpistout').classList.toggle('hidden', periode !== 'tout');
       document.querySelectorAll('#dash-periode-boutons button').forEach(b => b.classList.remove('active'));
       if (btnEl) btnEl.classList.add('active');
     }
@@ -6631,6 +6968,14 @@
       document.getElementById('d30-fisc').textContent = money(d.mois.fisc);
       document.getElementById('d30-net').textContent = money(d.mois.profitApresFisc);
       document.getElementById('d30-nb').textContent = d.mois.nbVentes;
+      if (d.total) {
+        document.getElementById('dt-revenus').textContent = money(d.total.revenus);
+        document.getElementById('dt-depenses').textContent = money(d.total.depenses);
+        document.getElementById('dt-taux').textContent = d.tauxFisc;
+        document.getElementById('dt-fisc').textContent = money(d.total.fisc);
+        document.getElementById('dt-net').textContent = money(d.total.profitApresFisc);
+        document.getElementById('dt-nb').textContent = d.total.nbVentes;
+      }
       document.getElementById('d-obj-atteints').textContent = d.objectifs.atteints;
       document.getElementById('d-obj-encours').textContent = d.objectifs.enCours;
 
@@ -6871,8 +7216,19 @@
       REDUCTION_PANIER_MANUELLE = pct > 0;
       renderCartUI();
     }
+    // Prévient la caisse quand le client choisi est sur la liste noire.
+    function afficherAlerteListeNoire_(clientId) {
+      const el = document.getElementById('cart-liste-noire'); if (!el) return;
+      const c = (DATA.comptesClients || []).find(x => x.ID === clientId);
+      const tel = String((c && c.Téléphone) || '').replace(/\D/g, '');
+      const nom = c ? ((c.Prénom ? c.Prénom + ' ' : '') + c.Nom).trim().toLowerCase() : '';
+      const e = clientId ? (DATA.listeNoire || []).find(x => x.ClientID === clientId || (tel.length >= 6 && String(x.Telephone || '').replace(/\D/g, '') === tel) || (nom && String(x.Nom || '').trim().toLowerCase() === nom)) : null;
+      el.textContent = e ? '⚠ LISTE NOIRE (' + e.Niveau + ') : ' + (e.Motif || '') : '';
+      el.classList.toggle('hidden', !e);
+    }
     function surChangementClientVente_(selectId, contexte) {
       if (contexte === 'CART') REDUCTION_PANIER_MANUELLE = false;
+      if (contexte === 'CART') afficherAlerteListeNoire_(document.getElementById(selectId).value);
       const clientId = document.getElementById(selectId).value;
       if (!clientId) {
         REDUCTIONS_VIP_VENTES[contexte] = 0;
@@ -7666,12 +8022,12 @@
       const toutes = DATA.reservations || [];
       const filtrees = RESA_FILTRE ? toutes.filter(r => r.Statut === RESA_FILTRE) : toutes;
       document.getElementById('tbl-reservations').innerHTML = filtrees.map(r => {
-        const couleurStatut = r.Statut === 'Confirmée' ? 'kpi-green' : r.Statut === 'Refusée' ? 'kpi-red' : 'kpi-gold';
+        const couleurStatut = r.Statut === 'Confirmée' ? 'kpi-green' : (r.Statut === 'Refusée' || r.Statut === 'Annulée') ? 'kpi-red' : 'kpi-gold';
         const commentaireAffiche = r.Statut === 'Refusée' && r.RaisonRefus
           ? escapeHtml(r.Commentaire || '-') + '<div class="small" style="color:var(--red);margin-top:2px;">Refus : ' + escapeHtml(r.RaisonRefus) + '</div>'
           : escapeHtml(r.Commentaire || '-');
         const commandeAffichee = r.Commande ? '<div class="small" style="color:var(--gold);margin-top:4px;">Précommande : ' + escapeHtml(r.Commande) + (Number(r.TotalCommande) > 0 ? ' - ' + money(r.TotalCommande) : '') + '</div>' : '';
-        return `<tr><td class="kpi-gold" style="font-weight:700;">${escapeHtml(r.NumeroReservation || '-')}</td><td>${fmtJour_(r.DateReservation)}</td><td>${escapeHtml(fmtHeureResa_(r.Heure))}</td><td>${escapeHtml(r.Nom)}</td><td class="small">${escapeHtml(r.Téléphone)}</td>
+        return `<tr><td class="kpi-gold" style="font-weight:700;">${escapeHtml(r.NumeroReservation || '-')}</td><td>${fmtJour_(r.DateReservation)}</td><td>${escapeHtml(fmtHeureResa_(r.Heure))}</td><td>${escapeHtml(r.Nom)}${r.ListeNoire ? ' <span class="pill pill-rupture" title="Personne sur la liste noire">⚠ ' + escapeHtml(r.ListeNoire) + '</span>' : ''}</td><td class="small">${escapeHtml(r.Téléphone)}</td>
           <td>${r.NbPersonnes}</td><td class="small">${commentaireAffiche}${commandeAffichee}</td><td class="${couleurStatut}" style="font-weight:600;">${escapeHtml(r.Statut)}</td>
           <td>${r.Statut === 'Confirmée' && r.CommandeDetail ? (r.CommandeVendue ? '<span class="pill pill-dispo" title="' + escapeHtml(r.CommandeVendue) + '">Encaissée</span> ' : `<a class="linklike" onclick="encaisserPrecommandeUI('${r.ID}')">Encaisser la précommande</a> `) : ''}${r.Statut !== 'Confirmée' ? `<a class="linklike" onclick="traiterReservationUI('${r.ID}','Confirmée')">Confirmer</a> ` : ''}${r.Statut !== 'Refusée' ? `<a class="linklike" onclick="traiterReservationUI('${r.ID}','Refusée')">Refuser</a> ` : `<a class="linklike" onclick="modifierRaisonRefusUI('${r.ID}')">Modifier la raison</a> `}<a class="linklike" onclick="supprimerReservationUI('${r.ID}')">Supprimer</a></td></tr>`;
       }).join('') || '<tr><td colspan="9" class="small">Aucune réservation ici.</td></tr>';
@@ -10097,7 +10453,7 @@
     const ONGLETS_DISPONIBLES = [
       ['dashboard', 'Tableau de bord'], ['shifts', 'Shifts'], ['ventes', 'Ventes'], ['achats', 'Dépenses'],
       ['articles', 'Articles'], ['stock', 'Stock'], ['ingredients', 'Ingrédients'], ['gestion-client', 'Gestion client'], ['objectifs', 'Objectifs'], ['agenda', 'Agenda'],
-      ['chat', 'Chat'], ['dj', 'DJ'], ['rapports-analyses', 'Rapports'], ['rapports-entreprise', 'Rapports Entreprise'],
+      ['chat', 'Chat'], ['dj', 'DJ'], ['rapports-analyses', 'Rapports'], ['cloture', 'Clôture'], ['liste-noire', 'Liste noire'], ['soirees', 'Soirées'], ['rapports-entreprise', 'Rapports Entreprise'],
       ['section-patron', 'Patron'], ['admin', 'Admin'], ['claque', 'Claque'], ['master-settings', 'Master Settings']
     ];
     const SECTIONS_DASHBOARD_DISPONIBLES = [
