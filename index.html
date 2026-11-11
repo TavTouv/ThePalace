@@ -2424,6 +2424,25 @@
 
       <section id="tab-ingredients" class="hidden">
         <div class="small mb10">Le stock de chaque ingrédient baisse à chaque vente d'un plat ou d'une boisson qui l'utilise. Les alertes se déclenchent quand il reste de quoi faire seulement 15 de chaque boisson ou 5 de chaque plat.</div>
+        <div class="card mb10" id="achat-carte">
+          <div class="flex-between mb10"><h2 style="margin:0;">Calculateur d'achat d'ingrédients</h2><button class="btn-ghost" onclick="viderPanierAchat()">Tout vider</button></div>
+          <div class="small mb10">Choisis des ingrédients et des quantités pour savoir combien ça te coûte (quantité × prix unitaire). Rien n'est enregistré tant que tu ne cliques pas sur « Enregistrer cet achat ».</div>
+          <div class="grid grid-3" style="align-items:end;">
+            <div><label>Ingrédient</label><input id="achat-choix" list="achat-liste-ing" placeholder="Tape pour chercher..." autocomplete="off"><datalist id="achat-liste-ing"></datalist></div>
+            <div><label>Quantité</label><input type="number" id="achat-qte" min="0" step="any" value="10"></div>
+            <div><button class="btn-primary btn-block" onclick="ajouterAuPanierAchat()">Ajouter</button></div>
+          </div>
+          <div class="grid grid-3 mt10" style="align-items:end;">
+            <div><label>Ou tous les ingrédients d'une recette</label><select id="achat-recette"></select></div>
+            <div><label>Nombre de portions à préparer</label><input type="number" id="achat-portions" min="1" step="1" value="10"></div>
+            <div><button class="btn-ghost btn-block" onclick="ajouterRecetteAuPanierAchat()">Ajouter la recette</button></div>
+          </div>
+          <div class="flex mt10"><button class="btn-ghost" onclick="ajouterReapproAuPanierAchat()">Ajouter les ingrédients à réapprovisionner</button></div>
+          <div class="table-wrap mt10"><table><thead><tr><th>Ingrédient</th><th>Prix unitaire</th><th>Quantité</th><th>Sous-total</th><th></th></tr></thead><tbody id="achat-corps"></tbody></table></div>
+          <div class="flex-between mt10"><span class="small" id="achat-avert" style="color:var(--gold);"></span><div>Total de l'achat : <b class="kpi-gold" id="achat-total" style="font-size:22px;">$0</b></div></div>
+          <div class="flex mt10" style="flex-wrap:wrap;"><button class="btn-ghost" onclick="copierPanierAchat()">Copier la liste</button><button class="btn-ghost" onclick="exporterPanierAchatCsv()">Exporter CSV</button><button class="btn-primary" id="achat-enregistrer" onclick="enregistrerAchatPanier()">Enregistrer cet achat (dépense + stock)</button></div>
+          <div class="err" id="achat-err"></div>
+        </div>
         <div class="card mb10" id="couts-carte">
           <div class="flex-between mb10"><h2 style="margin:0;">Coût de revient et marges des plats <span class="small" id="couts-moyenne"></span></h2></div>
           <div class="small mb10">Coût de revient = somme (quantité × prix unitaire) des ingrédients de la recette. Renseigne le prix d'un ingrédient avec « Infos » dans la liste plus bas.</div>
@@ -4797,6 +4816,7 @@
     function renderIngredients() {
       const r = INGR || { lignes: [], seuilBoissons: 15, seuilNourriture: 5, cible: 100 };
       const aCommander = r.lignes.filter(l => l.etat !== 'Disponible');
+      initCalculateurAchat_();
       document.getElementById('ingr-reappro-compte').textContent = aCommander.length ? '(' + aCommander.length + ')' : '';
       document.getElementById('ingr-info').textContent = 'Alerte quand il reste de quoi faire seulement ' + r.seuilBoissons + ' de chaque boisson ou ' + r.seuilNourriture + ' de chaque plat utilisant l\'ingrédient. La quantité proposée ramène le stock à son niveau de départ (de quoi faire ' + r.cible + ' de chaque plat).';
       document.getElementById('ingr-reappro-corps').innerHTML = aCommander.map(l => `<tr>
@@ -5352,6 +5372,102 @@
     // Jour et jour de la semaine d'aujourd'hui en heure française (et non en UTC : entre minuit et 1-2 h du matin, la date UTC retarde d'un jour).
     function aujourdhuiFR_() { return new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Paris', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date()); }
     function jourSemaineFR_() { return new Date(aujourdhuiFR_() + 'T12:00:00Z').getUTCDay(); }
+
+
+    // ===== Calculateur d'achat d'ingrédients =====
+    let PANIER_ACHAT = [];
+    try { PANIER_ACHAT = JSON.parse(localStorage.getItem('palace_panier_achat') || '[]').filter(l => l && l.id && Number(l.qte) > 0); } catch (e) { PANIER_ACHAT = []; }
+    function sauverPanierAchat_() { try { localStorage.setItem('palace_panier_achat', JSON.stringify(PANIER_ACHAT)); } catch (e) {  } }
+    function ingredientParId_(id) { return ((INGR && INGR.lignes) || []).find(x => x.ingredientId === id); }
+    function initCalculateurAchat_() {
+      const liste = (INGR && INGR.lignes) || [];
+      document.getElementById('achat-liste-ing').innerHTML = liste.map(x => `<option value="${escapeHtml(x.ingredient)}">${x.prixUnitaire > 0 ? money(x.prixUnitaire) : 'prix à renseigner'}</option>`).join('');
+      const remplir = function () {
+        document.getElementById('achat-recette').innerHTML = RECETTES_DATA.articles.filter(a => (RECETTES_DATA.recettes[a.id] || []).length).sort((a, b) => (a.categorie + a.nom).localeCompare(b.categorie + b.nom)).map(a => `<option value="${a.id}">${escapeHtml(a.categorie)} - ${escapeHtml(a.nom)}</option>`).join('');
+      };
+      if (RECETTES_DATA) remplir(); else google.script.run.withSuccessHandler(function (r) { RECETTES_DATA = r; remplir(); }).withFailureHandler(function () {}).getRecettes(CURRENT_USER.sessionToken);
+      document.getElementById('achat-enregistrer').classList.toggle('hidden', estRoleAdminLectureSeule());
+      renderPanierAchat_();
+    }
+    function ajouterLignePanierAchat_(id, qte) {
+      const l = PANIER_ACHAT.find(x => x.id === id);
+      if (l) l.qte = Math.round((l.qte + qte) * 1000) / 1000; else PANIER_ACHAT.push({ id: id, qte: Math.round(qte * 1000) / 1000 });
+    }
+    function ajouterAuPanierAchat() {
+      const err = document.getElementById('achat-err'); err.textContent = '';
+      const nom = document.getElementById('achat-choix').value.trim().toLowerCase();
+      const ing = ((INGR && INGR.lignes) || []).find(x => x.ingredient.toLowerCase() === nom);
+      const qte = Number(document.getElementById('achat-qte').value);
+      if (!ing) { err.textContent = 'Choisis un ingrédient dans la liste.'; return; }
+      if (!(qte > 0)) { err.textContent = 'Indique une quantité supérieure à 0.'; return; }
+      ajouterLignePanierAchat_(ing.ingredientId, qte);
+      document.getElementById('achat-choix').value = ''; document.getElementById('achat-choix').focus();
+      sauverPanierAchat_(); renderPanierAchat_();
+    }
+    function ajouterRecetteAuPanierAchat() {
+      const err = document.getElementById('achat-err'); err.textContent = '';
+      const id = document.getElementById('achat-recette').value; const portions = Number(document.getElementById('achat-portions').value);
+      if (!id || !RECETTES_DATA) { err.textContent = 'Choisis une recette.'; return; }
+      if (!(portions > 0)) { err.textContent = 'Indique un nombre de portions supérieur à 0.'; return; }
+      (RECETTES_DATA.recettes[id] || []).forEach(l => ajouterLignePanierAchat_(l.ingredientId, l.qte * portions));
+      sauverPanierAchat_(); renderPanierAchat_();
+    }
+    function ajouterReapproAuPanierAchat() {
+      const aCommander = ((INGR && INGR.lignes) || []).filter(x => x.etat !== 'Disponible' && x.aCommander > 0);
+      if (!aCommander.length) { showToast('Tous les ingrédients sont au-dessus de leur seuil d\'alerte.'); return; }
+      aCommander.forEach(x => ajouterLignePanierAchat_(x.ingredientId, x.aCommander));
+      sauverPanierAchat_(); renderPanierAchat_();
+    }
+    // Modifier une quantité met à jour les sous-totaux sur place, sans reconstruire le tableau (sinon le clic suivant sur « Retirer » serait perdu).
+    function modifierQtePanierAchat_(id, valeur) {
+      const l = PANIER_ACHAT.find(x => x.id === id); if (!l) return;
+      const q = Number(valeur);
+      l.qte = q > 0 ? q : 0;
+      sauverPanierAchat_(); majTotauxPanierAchat_();
+    }
+    function retirerDuPanierAchat(id) { PANIER_ACHAT = PANIER_ACHAT.filter(x => x.id !== id); sauverPanierAchat_(); renderPanierAchat_(); }
+    function viderPanierAchat() { PANIER_ACHAT = []; sauverPanierAchat_(); renderPanierAchat_(); }
+    function lignesPanierAchat_() {
+      return PANIER_ACHAT.map(l => { const ing = ingredientParId_(l.id); return ing ? { id: l.id, nom: ing.ingredient, unite: ing.unite, pu: ing.prixUnitaire, qte: l.qte, sous: Math.round(ing.prixUnitaire * l.qte * 100) / 100 } : null; }).filter(Boolean);
+    }
+    function totalPanierAchat_() { return Math.round(lignesPanierAchat_().reduce((s, l) => s + l.sous, 0) * 100) / 100; }
+    function majTotauxPanierAchat_() {
+      const lignes = lignesPanierAchat_();
+      lignes.forEach(l => { const c = document.getElementById('achat-sous-' + l.id); if (c) c.textContent = money(l.sous); });
+      document.getElementById('achat-total').textContent = money(totalPanierAchat_());
+      const sansPrix = lignes.filter(l => l.qte > 0 && !(l.pu > 0)).map(l => l.nom);
+      document.getElementById('achat-avert').textContent = sansPrix.length ? 'Prix manquant (non compté) : ' + sansPrix.join(', ') + '. Renseigne-le avec « Infos » plus bas.' : '';
+    }
+    function renderPanierAchat_() {
+      const lignes = lignesPanierAchat_();
+      document.getElementById('achat-corps').innerHTML = lignes.map(l => `<tr><td><b>${escapeHtml(l.nom)}</b></td>
+        <td>${l.pu > 0 ? money(l.pu) + ' <span class="small">/ ' + escapeHtml(l.unite) + '</span>' : '<span class="pill pill-bas">prix à renseigner</span>'}</td>
+        <td><input type="number" class="achat-qte-ligne" min="0" step="any" value="${l.qte}" style="width:100px;" oninput="modifierQtePanierAchat_('${l.id}', this.value)"></td>
+        <td id="achat-sous-${l.id}" class="kpi-gold" style="font-weight:700;">${money(l.sous)}</td><td><a class="linklike" onclick="retirerDuPanierAchat('${l.id}')">Retirer</a></td></tr>`).join('') || '<tr><td colspan="5" class="small">Ton achat est vide : ajoute des ingrédients ci-dessus.</td></tr>';
+      majTotauxPanierAchat_();
+    }
+    function texteListeAchat_() {
+      const l = lignesPanierAchat_().filter(x => x.qte > 0);
+      return l.map(x => x.nom + ' : ' + x.qte + ' ' + x.unite + (x.pu > 0 ? ' x ' + money(x.pu) + ' = ' + money(x.sous) : ' (prix à renseigner)')).join('\n') + (l.length ? '\nTOTAL : ' + money(totalPanierAchat_()) : '');
+    }
+    function copierPanierAchat() {
+      const t = texteListeAchat_(); if (!t) { showToast('Ton achat est vide.'); return; }
+      if (navigator.clipboard) navigator.clipboard.writeText(t).then(() => showToast('Liste copiée.'), () => showToast('Copie impossible.', true)); else showToast('Copie impossible sur ce navigateur.', true);
+    }
+    function exporterPanierAchatCsv() {
+      const l = lignesPanierAchat_().filter(x => x.qte > 0); if (!l.length) { showToast('Ton achat est vide.'); return; }
+      telechargerCsv_('achat-ingredients.csv', [['Ingrédient', 'Unité', 'Prix unitaire', 'Quantité', 'Sous-total']].concat(l.map(x => [x.nom, x.unite, x.pu, x.qte, x.sous])).concat([['TOTAL', '', '', '', totalPanierAchat_()]]));
+    }
+    function enregistrerAchatPanier() {
+      const lignes = lignesPanierAchat_().filter(x => x.qte > 0); const err = document.getElementById('achat-err'); err.textContent = '';
+      if (!lignes.length) { err.textContent = 'Ton achat est vide.'; return; }
+      confirmerActionAvantExecution('Enregistrer l\'achat', 'Enregistrer cet achat de ' + lignes.length + ' ingrédient(s) pour ' + money(totalPanierAchat_()) + ' ? Il sera compté en dépense et les stocks seront augmentés.', function () {
+        google.script.run.withSuccessHandler(function (res) {
+          showToast('Achat enregistré : ' + res.nb + ' ingrédient(s), ' + money(res.total) + '.');
+          PANIER_ACHAT = []; sauverPanierAchat_(); chargerIngredients();
+        }).withFailureHandler(function (e) { err.textContent = e.message || String(e); }).reapprovisionnerIngredients(lignes.map(l => ({ ingredientId: l.id, qte: l.qte })), CURRENT_USER.sessionToken);
+      });
+    }
 
     // ===== Rester connecté =====
     function memoriserSessionLongue_(token) { try { localStorage.setItem('unicorn_session_longue', JSON.stringify({ token: token })); } catch (e) {  } }
