@@ -2424,6 +2424,11 @@
 
       <section id="tab-ingredients" class="hidden">
         <div class="small mb10">Le stock de chaque ingrédient baisse à chaque vente d'un plat ou d'une boisson qui l'utilise. Les alertes se déclenchent quand il reste de quoi faire seulement 15 de chaque boisson ou 5 de chaque plat.</div>
+        <div class="card mb10" id="couts-carte">
+          <div class="flex-between mb10"><h2 style="margin:0;">Coût de revient et marges des plats <span class="small" id="couts-moyenne"></span></h2></div>
+          <div class="small mb10">Coût de revient = somme (quantité × prix unitaire) des ingrédients de la recette. Renseigne le prix d'un ingrédient avec « Infos » dans la liste plus bas.</div>
+          <div class="table-wrap"><table><thead><tr><th>Plat</th><th>Rubrique</th><th>Coût de revient</th><th>Prix de vente</th><th>Marge</th><th>Marge %</th><th></th></tr></thead><tbody id="couts-corps"></tbody></table></div>
+        </div>
         <div class="card mb10" id="ingr-reappro-carte">
           <div class="flex-between mb10">
             <h2 style="margin:0;">Ingrédients à réapprovisionner <span class="small" id="ingr-reappro-compte"></span></h2>
@@ -2451,6 +2456,7 @@
             <div class="small mb10">Une ligne par ingrédient, avec la quantité utilisée pour <b>une</b> portion. Par défaut, chaque ingrédient compte pour 1 portion : adapte-les avec tes vraies quantités (en cl, g, unités...) et change l'unité dans « Infos ».</div>
             <label>Plat ou boisson</label>
             <select id="recette-article" onchange="renderRecetteEditeur()"></select>
+            <div class="small mt10" id="recette-cout"></div>
             <div class="table-wrap mt10"><table><thead><tr><th>Ingrédient</th><th>Quantité par portion</th><th></th></tr></thead><tbody id="recette-lignes"></tbody></table></div>
             <datalist id="recette-ingredients"></datalist>
             <div class="flex mt10"><button class="btn-ghost" onclick="ajouterLigneRecette()">+ Ajouter un ingrédient</button><button class="btn-primary" onclick="enregistrerRecette()">Enregistrer la recette</button></div>
@@ -4770,8 +4776,20 @@
     let INGR = null;
     let RECETTES_DATA = null;
     const ETAT_ING_PILL = { 'Disponible': 'pill-dispo', 'Stock bas': 'pill-bas', 'Rupture': 'pill-rupture' };
+    let COUTS = {};
+    function chargerCouts_() {
+      google.script.run.withSuccessHandler(function (r) {
+        COUTS = {}; r.plats.forEach(p => { COUTS[p.id] = p; });
+        document.getElementById('couts-moyenne').textContent = r.margeMoyennePct ? '(marge moyenne : ' + r.margeMoyennePct + ' %)' : '';
+        document.getElementById('couts-corps').innerHTML = r.plats.map(p => `<tr><td><b>${escapeHtml(p.article)}</b></td><td class="small">${escapeHtml(p.categorie)}</td><td>${p.nbIngredients ? money(p.cout) : '<span class="small">pas de recette</span>'}</td><td>${money(p.prixVente)}</td>
+          <td class="${p.marge >= 0 ? 'kpi-green' : 'kpi-red'}" style="font-weight:700;">${p.nbIngredients ? money(p.marge) : '-'}</td><td>${p.nbIngredients ? p.margePct + ' %' : '-'}</td>
+          <td>${p.ingredientsSansPrix.length ? '<span class="pill pill-bas" title="Prix manquant : ' + escapeHtml(p.ingredientsSansPrix.join(', ')) + '">prix manquant : ' + escapeHtml(p.ingredientsSansPrix.join(', ')) + '</span>' : ''}</td></tr>`).join('') || '<tr><td colspan="7" class="small">Aucun plat.</td></tr>';
+        if (document.getElementById('recette-article') && document.getElementById('recette-article').value) renderRecetteEditeur();
+      }).withFailureHandler(function () {}).getCoutsRevient(CURRENT_USER.sessionToken);
+    }
     function chargerIngredients() {
       if (!document.getElementById('ingr-reappro-corps')) return;
+      chargerCouts_();
       document.getElementById('ingr-reappro-corps').innerHTML = '<tr><td colspan="7" class="small">Chargement...</td></tr>';
       google.script.run.withSuccessHandler(function (r) { INGR = r; renderIngredients(); })
         .withFailureHandler(onError).getIngredientsStock(CURRENT_USER.sessionToken);
@@ -4877,6 +4895,8 @@
       const lignes = (RECETTES_DATA && RECETTES_DATA.recettes[id]) || [];
       document.getElementById('recette-lignes').innerHTML = lignes.map(l => ligneRecetteHtml_(l.nom, l.qte)).join('') || '<tr><td colspan="3" class="small">Aucune recette : ajoute des ingrédients.</td></tr>';
       document.getElementById('recette-err').textContent = '';
+      const cout = COUTS[id];
+      document.getElementById('recette-cout').innerHTML = cout && cout.nbIngredients ? 'Coût de revient actuel : <b>' + money(cout.cout) + '</b> - prix de vente : <b>' + money(cout.prixVente) + '</b> - marge : <b class="' + (cout.marge >= 0 ? 'kpi-green' : 'kpi-red') + '">' + money(cout.marge) + ' (' + cout.margePct + ' %)</b>' + (cout.ingredientsSansPrix.length ? ' <span class="small">- prix manquant : ' + escapeHtml(cout.ingredientsSansPrix.join(', ')) + '</span>' : '') : '';
     }
     function ajouterLigneRecette() {
       const corps = document.getElementById('recette-lignes');
