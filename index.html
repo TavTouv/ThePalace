@@ -3659,6 +3659,7 @@
       </div>
 
       <div id="profil-section-parametres" class="hidden">
+        <div class="small mb10" id="profil-version" style="opacity:.8;"></div>
         <input id="profil-recherche-input" placeholder="Rechercher un réglage... (ex: thème, mot de passe, son)" oninput="filtrerProfilParametres(this.value)" style="margin-bottom:14px;">
 
         <details class="ms-groupe" open>
@@ -7189,7 +7190,16 @@
         document.getElementById('profil-pourboires-corps').innerHTML = r.lignes.map(l => `<tr><td>${fmtJour_(l.soiree + 'T12:00:00')}</td><td class="kpi-gold" style="font-weight:700;">${money(l.montant)}</td><td><span class="pill ${l.verse ? 'pill-dispo' : 'pill-bas'}">${l.verse ? 'Versé' : 'À recevoir'}</span></td></tr>`).join('') || '<tr><td colspan="3" class="small">Aucun pourboire partagé pour l\'instant.</td></tr>';
       }).withFailureHandler(function () {}).getMesPourboires(CURRENT_USER.sessionToken);
     }
+    // Version du site (ce fichier) et du serveur (Code.gs) : permet de vérifier que les deux ont bien été mis à jour.
+    const VERSION_SITE = 'palace-2026-11-02-U';
+    function afficherVersion_() {
+      const el = document.getElementById('profil-version'); if (!el) return;
+      const serveur = (DATA && DATA.versionServeur) || 'inconnue (Code.gs pas à jour)';
+      const ok = serveur === VERSION_SITE;
+      el.innerHTML = 'Version du site : <b>' + escapeHtml(VERSION_SITE) + '</b> - version du serveur : <b>' + escapeHtml(serveur) + '</b>' + (ok ? ' <span class="kpi-green">✓ à jour</span>' : ' <span class="kpi-red">⚠ les deux fichiers ne sont pas à la même version : mets à jour <b>Code.gs</b> (Apps Script, nouvelle version) et <b>index.html</b> (hébergement).</span>');
+    }
     function chargerProfil() {
+      afficherVersion_();
       chargerMesPourboires_();
       renderProfilFiltres();
       let debutOverride = null, finOverride = null;
