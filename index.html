@@ -2437,6 +2437,12 @@
             <div><label>Nombre de portions à préparer</label><input type="number" id="achat-portions" min="1" step="1" value="10"></div>
             <div><button class="btn-ghost btn-block" onclick="ajouterRecetteAuPanierAchat()">Ajouter la recette</button></div>
           </div>
+          <div class="grid grid-3 mt10" style="align-items:end;">
+            <div><label>Ou : objectif de stock pour CHAQUE plat de la carte</label><input type="number" id="achat-objectif" min="1" step="1" value="100"></div>
+            <div><label>Pour quels plats ?</label><select id="achat-objectif-type"><option value="tous">Boissons + nourriture</option><option value="boissons">Boissons seulement</option><option value="nourriture">Nourriture seulement</option></select></div>
+            <div><button class="btn-ghost btn-block" onclick="ajouterObjectifAuPanierAchat()">Ajouter ce qu'il manque</button></div>
+          </div>
+          <div class="small mt10">Le stock actuel est déduit. Pour un ingrédient commun aux boissons et à la nourriture (Citron, Lait, Vanille, Miel, Sucre), le manque est partagé entre les deux au prorata de leurs besoins : acheter la liste « boissons » puis la liste « nourriture » donne exactement le total.</div>
           <div class="flex mt10"><button class="btn-ghost" onclick="ajouterReapproAuPanierAchat()">Ajouter les ingrédients à réapprovisionner</button></div>
           <div class="table-wrap mt10"><table><thead><tr><th>Ingrédient</th><th>Prix unitaire</th><th>Quantité</th><th>Sous-total</th><th></th></tr></thead><tbody id="achat-corps"></tbody></table></div>
           <div class="flex-between mt10"><span class="small" id="achat-avert" style="color:var(--gold);"></span><div>Total de l'achat : <b class="kpi-gold" id="achat-total" style="font-size:22px;">$0</b></div></div>
@@ -5413,6 +5419,35 @@
       (RECETTES_DATA.recettes[id] || []).forEach(l => ajouterLignePanierAchat_(l.ingredientId, l.qte * portions));
       sauverPanierAchat_(); renderPanierAchat_();
     }
+    // Objectif de stock : de quoi faire N portions de CHAQUE plat. Les ingrédients communs à plusieurs plats sont additionnés, puis le stock actuel est déduit.
+    function ajouterObjectifAuPanierAchat() {
+      const err = document.getElementById('achat-err'); err.textContent = '';
+      const n = Number(document.getElementById('achat-objectif').value);
+      const type = document.getElementById('achat-objectif-type').value;
+      if (!(n > 0)) { err.textContent = 'Indique un nombre de portions supérieur à 0.'; return; }
+      if (!RECETTES_DATA || !INGR) { err.textContent = 'Chargement en cours, réessaie dans un instant.'; return; }
+      const estBoisson = a => ['soft', 'cocktails', 'cocktail', 'alcools', 'alcool'].indexOf(String(a.categorie || '').toLowerCase()) !== -1;
+      const parId = {}; RECETTES_DATA.articles.forEach(a => { parId[a.id] = a; });
+      const bBoissons = {}, bNourriture = {};
+      Object.keys(RECETTES_DATA.recettes).forEach(function (idArt) {
+        const cible = parId[idArt] && estBoisson(parId[idArt]) ? bBoissons : bNourriture;
+        (RECETTES_DATA.recettes[idArt] || []).forEach(l => { cible[l.ingredientId] = (cible[l.ingredientId] || 0) + l.qte * n; });
+      });
+      let nb = 0;
+      Object.keys(Object.assign({}, bBoissons, bNourriture)).forEach(function (id) {
+        const ing = ingredientParId_(id); if (!ing) return;
+        const bb = bBoissons[id] || 0, bn = bNourriture[id] || 0, total = bb + bn;
+        const manque = Math.max(0, total - Math.max(0, ing.stock));
+        // Un seul stock pour les deux : le manque total est réparti au prorata des besoins (les parts s'additionnent exactement).
+        const partBoissons = total > 0 ? Math.round(manque * bb / total) : 0;
+        const aAjouter = type === 'boissons' ? partBoissons : type === 'nourriture' ? manque - partBoissons : manque;
+        const q = Math.ceil(aAjouter * 100) / 100;
+        if (q > 0) { ajouterLignePanierAchat_(id, q); nb++; }
+      });
+      sauverPanierAchat_(); renderPanierAchat_();
+      const libelle = type === 'boissons' ? 'de chaque boisson' : type === 'nourriture' ? 'de chaque plat de nourriture' : 'de chaque plat';
+      showToast(nb ? nb + ' ingrédient' + (nb > 1 ? 's' : '') + ' ajouté' + (nb > 1 ? 's' : '') + ' au panier pour atteindre ' + n + ' portions ' + libelle + '.' : 'Ton stock couvre déjà ' + n + ' portions ' + libelle + '.');
+    }
     function ajouterReapproAuPanierAchat() {
       const aCommander = ((INGR && INGR.lignes) || []).filter(x => x.etat !== 'Disponible' && x.aCommander > 0);
       if (!aCommander.length) { showToast('Tous les ingrédients sont au-dessus de leur seuil d\'alerte.'); return; }
@@ -7191,7 +7226,7 @@
       }).withFailureHandler(function () {}).getMesPourboires(CURRENT_USER.sessionToken);
     }
     // Version du site (ce fichier) et du serveur (Code.gs) : permet de vérifier que les deux ont bien été mis à jour.
-    const VERSION_SITE = 'palace-2026-11-02-U';
+    const VERSION_SITE = 'palace-2026-11-02-W';
     function afficherVersion_() {
       const el = document.getElementById('profil-version'); if (!el) return;
       const serveur = (DATA && DATA.versionServeur) || 'inconnue (Code.gs pas à jour)';
